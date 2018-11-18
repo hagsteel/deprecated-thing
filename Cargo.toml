@@ -6,8 +6,10 @@ authors = ["Jonas Hagstedt <hagstedt@gmail.com>"]
 [dependencies]
 log = "0.4.6"
 mio = "0.6.16"
-mio-uds = "0.6.7"
 net2 = "0.2.33"
 byteorder = "1.2.7"
+
+[target.'cfg(unix)'.dependencies]
+mio-uds = "0.6.7"
 
 [features]
