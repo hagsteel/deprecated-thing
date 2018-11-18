@@ -109,8 +109,11 @@ fn main() -> Result<()> {
                 println!("wrote a total of {} bytes", bytecount);
                 write_queue.pop_front();
                 if write_queue.is_empty() {
+                    // The write queue is empty, register for more read events
                     let _ = sessions.reregister_readable(&poll, event.token());
                 } else {
+                    // There are still messages in the queue.
+                    // Keep writing
                     let _ = sessions.reregister_writable(&poll, event.token());
                 }
             });
