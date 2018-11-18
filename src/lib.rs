@@ -2,7 +2,7 @@
 //! # Simple Oppinionated Networking in Rust
 //!
 //! Sonr is built on top of [mio](https://crates.io/crates/mio), with the 
-//! goal of making networking in Rust a bit simpler.
+//! goal of making networking in Rust a bit easier.
 #[macro_use] extern crate log;
              extern crate mio;
 #[cfg(unix)] extern crate mio_uds;
