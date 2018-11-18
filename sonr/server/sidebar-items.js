@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["tcp_listener","Create a `TcpListener` from an address and a port."],["uds_listener","Create a `UnixListener` for a unix domain socket."]],"struct":[["Server","A server wraps a listener and accepts incoming connections."]],"trait":[["Listener","Trait for implementing a listener."]]});

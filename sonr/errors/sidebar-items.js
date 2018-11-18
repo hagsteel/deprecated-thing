@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","Wrapping error type."]],"type":[["Result","Result type: `std::result::Error<T, Error>`"]]});

@@ -1,0 +1,12 @@
+var ALIASES = {};
+ALIASES['byteorder'] = {};
+ALIASES['cfg_if'] = {};
+ALIASES['iovec'] = {};
+ALIASES['lazycell'] = {};
+ALIASES['libc'] = {};
+ALIASES['log'] = {};
+ALIASES['mio'] = {};
+ALIASES['mio_uds'] = {};
+ALIASES['net2'] = {};
+ALIASES['slab'] = {};
+ALIASES['sonr'] = {};
