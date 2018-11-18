@@ -14,6 +14,10 @@ It is built on top of Mio.
 ## Example
 
 ```rust
+static RESPONSE: &'static [u8] = b"HTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\nContent-Encoding: UTF-8\nContent-Length: 126\nServer: Sonr example http server\nAccept-Ranges: bytes\nConnection: close\n\n<html> <head> <title>An Example Page</title> </head> <body> Hello World, this is a very simple HTML document.  </body> </html>";
+
+const SERVER_TOKEN: Token = Token(0);
+
 fn main() -> Result<()> {
     let poll = Poll::new()?;
     let mut events = Events::with_capacity(1024);
