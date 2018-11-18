@@ -305,7 +305,7 @@ impl<C> Sessions<C>
     /// with the same `Poll` handle.
     ///
     /// ```
-    /// # cfg(unix)
+    /// # #[cfg(unix)]
     /// # fn main() {
     /// # use sonr::connections::{Sessions, TcpConnection, UdsConnection};
     /// let max_con = 100_000;
