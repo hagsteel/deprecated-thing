@@ -6,7 +6,10 @@ mod uds_connection;
 mod sessions;
 
 pub use self::tcp_connection::TcpConnection;
+
+#[cfg(unix)]
 pub use self::uds_connection::UdsConnection;
+
 pub use self::sessions::{
     Sessions, 
     Session, 

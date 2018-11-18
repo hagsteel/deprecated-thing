@@ -12,6 +12,8 @@ use errors::Result;
 
 // Re-exports
 pub use mio::tcp::TcpListener;
+
+#[cfg(unix)]
 pub use mio_uds::UnixListener;
 
 // -----------------------------------------------------------------------------
