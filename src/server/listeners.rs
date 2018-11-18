@@ -6,12 +6,6 @@ use mio::tcp::TcpStream;
 use mio_uds::UnixStream;
 use net2::TcpBuilder;
 use net2::unix::UnixTcpBuilderExt;
-
-// use std::sync::Arc;
-// use rustls;
-// use rustls::ServerSession;
-
-// use servers::tls::make_config_noarc;
 use errors::Result;
 
 // Re-exports
@@ -47,15 +41,6 @@ impl Listener for TcpListener {
         Ok(stream)
     }
 }
-
-// impl IntoTlsConnection for TcpStream {
-//     fn into_tls_connection(self,cert_filepath: &str, private_key_filepath: &str, buffer_size: usize) -> Result<TlsConnection<ServerSession>> {
-//         let config = Arc::new(make_config_noarc(cert_filepath, private_key_filepath)?);
-//         let tls_session = rustls::ServerSession::new(&config);
-//         let connection = TlsConnection::new(self, buffer_size, tls_session)?;
-//         Ok(connection)
-//     }
-// }
 
 /// Create a `TcpListener` from an address and a port.
 pub fn tcp_listener(address: &str, port: u16) -> Result<TcpListener> {

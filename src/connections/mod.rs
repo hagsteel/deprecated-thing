@@ -1,6 +1,7 @@
 //! # Connections and Sessions
 use std::ops::{Index, IndexMut};
 mod tcp_connection;
+#[cfg(unix)]
 mod uds_connection;
 mod sessions;
 

@@ -5,7 +5,7 @@
 //! goal of making networking in Rust a bit simpler.
 #[macro_use] extern crate log;
              extern crate mio;
-             extern crate mio_uds;
+#[cfg(unix)] extern crate mio_uds;
              extern crate net2;
              extern crate byteorder;
 
