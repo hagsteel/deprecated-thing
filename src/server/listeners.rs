@@ -3,9 +3,11 @@ use std::net::ToSocketAddrs;
 
 use mio::Evented;
 use mio::tcp::TcpStream;
-use mio_uds::UnixStream;
 use net2::TcpBuilder;
+#[cfg(unix)]
 use net2::unix::UnixTcpBuilderExt;
+#[cfg(unix)]
+use mio_uds::UnixStream;
 use errors::Result;
 
 // Re-exports

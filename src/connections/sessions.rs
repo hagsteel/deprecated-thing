@@ -154,7 +154,7 @@ impl<C: Connection> Session<C> {
     /// [`reregister_writable`]: struct.Sessions.html#method.reregister_writable
     /// [`Sessions`]: struct.Sessions.html
     pub fn register_writable(&mut self, poll: &Poll, token: Token) -> Result<()> {
-        if self.registered == true {
+        if self.registered {
             return Err(Error::AlreadyRegistered);
         }
 
@@ -168,7 +168,7 @@ impl<C: Connection> Session<C> {
     ///
     /// [`register_writable`]: struct.Session.html#method.register_writable
     pub fn register_readable(&mut self, poll: &Poll, token: Token) -> Result<()> {
-        if self.registered == true {
+        if self.registered {
             return Err(Error::AlreadyRegistered);
         }
         self.connection.interest().insert(Ready::readable());

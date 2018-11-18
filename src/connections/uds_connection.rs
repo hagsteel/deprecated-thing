@@ -2,7 +2,6 @@ use std::io;
 use std::path::Path;
 use std::io::ErrorKind::{ConnectionReset, WouldBlock};
 use std::io::{Read, Write};
-use std::net::Shutdown;
 use mio::{Ready, Poll, PollOpt, Token};
 use mio_uds::UnixStream;
 

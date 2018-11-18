@@ -3,7 +3,7 @@ use mio::{Poll, PollOpt, Ready, Token};
 use std::io;
 use std::io::ErrorKind::{ConnectionReset, WouldBlock};
 use std::io::{Read, Write, ErrorKind};
-use std::net::{Shutdown, SocketAddr, ToSocketAddrs};
+use std::net::{SocketAddr, ToSocketAddrs};
 
 use super::Connection;
 

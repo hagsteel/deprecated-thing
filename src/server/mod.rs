@@ -2,7 +2,11 @@
 mod listeners;
 
 pub use self::listeners::Listener;
-pub use self::listeners::{tcp_listener, uds_listener};
+pub use self::listeners::tcp_listener;
+
+#[cfg(unix)]
+pub use self::listeners::uds_listener;
+
 use std::io::ErrorKind;
 use mio::{Poll, PollOpt, Ready, Token};
 use errors::{Result, Error};
