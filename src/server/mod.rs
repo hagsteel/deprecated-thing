@@ -20,6 +20,7 @@ use errors::{Result, Error};
 ///
 /// ```
 /// # use sonr::errors::Result;
+/// # use std::time::Duration;
 /// use sonr::server::{tcp_listener, Server};
 /// use sonr::connections::TcpConnection;
 /// use sonr::{Events, Poll};
@@ -40,9 +41,10 @@ use errors::{Result, Error};
 ///
 /// // Connect to the server
 /// let connection = TcpConnection::connect("127.0.0.1", 5000)?;
+/// let timeout = Duration::from_millis(100);
 ///
 /// loop {
-///     poll.poll(&mut events, None)?;
+///     poll.poll(&mut events, Some(timeout))?;
 ///     for event in &events {
 ///         if event.token() == tcp_server.token() {
 ///             // Accept a new connection
@@ -50,6 +52,7 @@ use errors::{Result, Error};
 ///             return Ok(());
 ///         }
 ///     }
+/// #   panic!("Test failed");
 /// }
 ///
 /// # Ok(())
