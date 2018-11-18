@@ -11,6 +11,14 @@ It is built on top of Mio.
 *  [API docs](https://hagsteel.github.io/sonr/)
 *  [Examples](https://github.com/hagsteel/sonr/tree/master/examples)
 
+## Setup
+
+```
+[dependencies]
+sonr = {git = "https://github.com/hagsteel/sonr" }
+
+```
+
 ## Example
 
 ```rust
