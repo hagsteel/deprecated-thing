@@ -305,6 +305,8 @@ impl<C> Sessions<C>
     /// with the same `Poll` handle.
     ///
     /// ```
+    /// # cfg(unix)
+    /// # fn main() {
     /// # use sonr::connections::{Sessions, TcpConnection, UdsConnection};
     /// let max_con = 100_000;
     ///
@@ -315,6 +317,7 @@ impl<C> Sessions<C>
     /// // Adding a `Session` to uds_sessions would give it
     /// // a token of 100_000
     /// let mut uds_sessions = Sessions::<UdsConnection>::with_capacity_and_offset(100, max_con);
+    /// # }
     /// ```
     ///
     /// [`PreVec`]: ../struct.PreVec.html
