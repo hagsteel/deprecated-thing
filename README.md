@@ -1,5 +1,7 @@
 # Sonr
 
+### Note: this is a work in progress and the api might change
+
 Simple Opinionated Networking in Rust
 
 The goal of Sonr is to provide a light weight networking library that makes it
