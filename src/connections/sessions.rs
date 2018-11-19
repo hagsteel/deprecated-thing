@@ -349,6 +349,11 @@ impl<C> Sessions<C>
         self.inner.remove(token.into());
     }
 
+    /// Return number of sessions
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+
     /// Get a mutable reference to a `Session`
     pub fn get_mut<T: Into<usize>>(&mut self, token: T) -> Option<&mut Session<C>> {
         self.inner.get_mut(token.into())

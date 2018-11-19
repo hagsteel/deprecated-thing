@@ -59,24 +59,24 @@ use errors::{Result, Error};
 /// # }
 /// ```
 #[derive(Debug)]
-pub struct Server<'a, L>
+pub struct Server<'poll, L>
 where 
     L: Listener,
 {
     listener: L,
-    poll: &'a Poll,
+    poll: &'poll Poll,
     server_token: Token,
 }
 
 
-impl<'a, L> Server<'a, L>
+impl<'poll, L> Server<'poll, L>
 where
     L: Listener,
 {
     /// Create a new server instance from a listener and a token.
     /// The token has to be unique to the `Poll` instance, as no two
     /// entities should be registered with the same token.
-    pub fn new(listener: L, token: impl Into<Token>, poll: &'a Poll) -> Self {
+    pub fn new(listener: L, token: impl Into<Token>, poll: &'poll Poll) -> Self {
         Self {
             listener,
             server_token: token.into(),
