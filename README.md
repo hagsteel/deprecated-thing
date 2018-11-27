@@ -1,6 +1,6 @@
 # Sonr
 
-### Note: this is a work in progress and the api might change
+### Note: this is a work in progress and the api will change
 
 Simple Opinionated Networking in Rust
 
