@@ -2,12 +2,11 @@
 name = "sonr"
 version = "0.1.0"
 authors = ["Jonas Hagstedt <hagstedt@gmail.com>"]
+edition = "2018"
 
 [dependencies]
-log = "0.4.6"
 mio = "0.6.16"
-net2 = "0.2.33"
-byteorder = "1.2.7"
+crossbeam = "0.7.1"
 
 [target.'cfg(unix)'.dependencies]
 mio-uds = "0.6.7"

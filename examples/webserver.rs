@@ -1,51 +1,82 @@
-extern crate sonr;
+use std::io::Write;
+use std::io::ErrorKind::WouldBlock;
+use std::net::SocketAddr;
+use std::collections::HashMap;
+use std::thread;
 
-use sonr::{Token, Poll, Events};
+use sonr::{Token, Event};
 use sonr::errors::Result;
-use sonr::server::{Server, tcp_listener};
-use sonr::connections::{Sessions, Session, TcpConnection};
+use sonr::net::tcp::{ReactiveTcpListener, ReactiveTcpStream, TcpStream};
+use sonr::reactor::Reactive;
+use sonr::system::System;
+use sonr::sync::queue::{ReactiveDeque, ReactiveQueue};
 
-static RESPONSE: &'static [u8] = b"HTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\nContent-Encoding: UTF-8\nContent-Length: 126\nServer: Sonr example http server\nAccept-Ranges: bytes\nConnection: close\n\n<html> <head> <title>An Example Page</title> </head> <body> Hello World, this is a very simple HTML document.  </body> </html>";
+// -----------------------------------------------------------------------------
+// 		- Disclaimer -
+// 		This example will simply write the response to the
+// 		underlying tcp stream until it either blocks
+// 		or errors out. This is not how a web server should behave,
+// 		but it's useful for testing.
+// -----------------------------------------------------------------------------
 
-const SERVER_TOKEN: Token = Token(0);
+static RESPONSE: &'static [u8] = b"HTTP/1.1 200 OK\nContent-Length: 13\n\nHello World\n\n";
 
-fn main() -> Result<()> {
-    let poll = Poll::new()?;
-    let mut events = Events::with_capacity(1024);
-    let listener = tcp_listener("127.0.0.1", 5000)?;
-    let mut server = Server::new(listener, SERVER_TOKEN, &poll);
-    server.listen()?;
-    let mut sessions = Sessions::with_capacity_and_offset(10_000, 1);
+struct Connections {
+    inner: HashMap<Token, ReactiveTcpStream>
+}
 
-    loop {
-        poll.poll(&mut events, None);
+impl Reactive for Connections {
+    type Input = (TcpStream, SocketAddr);
+    type Output = ();
 
-        for event in &events {
-            if event.token() == SERVER_TOKEN {
-                let stream = server.accept()?;
-                let connection: TcpConnection = stream.into();
-                let session = Session::new(connection);
-                let (token, session) = sessions.add(&poll, session)?;
-                session.reregister_readable(&poll, token);
-                continue
+    fn reacting(&mut self, event: Event) -> bool {
+        let reacting = self.inner.get(&event.token()).is_some();
+
+        let stream = self.inner.remove(&event.token()).map(|mut stream| {
+            stream.reacting(event);
+            while stream.writable() {
+                match stream.write(&RESPONSE) { 
+                    Ok(_) => {},
+                    Err(ref e) if e.kind() == WouldBlock => return Some(stream),
+                    Err(e) => return None,
+                }
             }
+            return None
+        });
 
-            // Read the request
-            sessions.try_read(&poll, &event).and_then(|_buf| {
-                // decode the request
-            }).done(|_| {
-                sessions.reregister_writable(&poll, event.token());
-            });
-
-            sessions.try_write(&poll, &event).with(|| {
-                &RESPONSE
-            }).done(|_| {
-                // Drop the connection when it's done
-                sessions.remove(event.token());
-            });
+        match stream {
+            Some(Some(stream)) => { self.inner.insert(stream.token(), stream); }
+            _ => {}
         }
+
+        reacting
     }
 
+    fn react_to(&mut self, input: Self::Input) {
+        let (stream, _) = input; // ignore address 
+        let tcp_stream = ReactiveTcpStream::new(stream).unwrap(); 
+        self.inner.insert(tcp_stream.token(), tcp_stream);
+    }
+}
 
+fn main() -> Result<()> {
+    System::init();
+    let listener = ReactiveTcpListener::bind("127.0.0.1:5555")?;
+    let mut stream_q = ReactiveQueue::unbounded();
+
+    for _ in 0..8 {
+        let deque = stream_q.deque();
+        thread::spawn(move || {
+            System::init();
+            let incoming_streams = ReactiveDeque::new(deque).unwrap();
+            let connections = Connections { inner: HashMap::new() };
+
+            let streams = incoming_streams.chain(connections);
+            System::start(streams);
+        });
+    }
+        
+    let server = listener.chain(stream_q);
+    System::start(server);
     Ok(())
 }

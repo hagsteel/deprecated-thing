@@ -1,9 +1,8 @@
 use std::mem::replace;
 use std::ops::{Index, IndexMut};
 
-use errors::{Result, Error};
+use crate::errors::{Result, Error};
 
-#[derive(Debug)]
 enum Entry<T> {
     Empty(usize),
     Occupied(T)
@@ -47,7 +46,6 @@ enum Entry<T> {
 /// Note that setting the offset to `std::usize::MAX` would mean only one 
 /// element can be stored in the PreVec, and any attempt to insert more
 /// would result in an error
-#[derive(Debug)]
 pub struct PreVec<T> {
     inner: Vec<Entry<T>>,
     capacity: usize,
@@ -289,6 +287,22 @@ impl<T> IndexMut<usize> for PreVec<T> {
             Entry::Occupied(v) => v,
             Entry::Empty(_) => panic!("invalid index: {}", index),
         }
+    }
+}
+
+
+// -----------------------------------------------------------------------------
+// 		- Hackery dooda -
+// 		TODO: remove this
+// -----------------------------------------------------------------------------
+impl<T> PreVec<T> {
+    pub fn map<F: Fn(&T)>(&self, f: F) {
+        self.inner.iter().for_each(|e| {
+            match e {
+                Entry::Occupied(v) => f(v),
+                Entry::Empty(_) => ()
+            }
+        });
     }
 }
 

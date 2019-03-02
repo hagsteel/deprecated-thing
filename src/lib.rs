@@ -1,21 +1,20 @@
-#![deny(missing_docs)]
-//! # Simple Oppinionated Networking in Rust
-//!
-//! Sonr is built on top of [mio](https://crates.io/crates/mio), with the 
-//! goal of making networking in Rust a bit easier.
-#[macro_use] extern crate log;
-             extern crate mio;
-#[cfg(unix)] extern crate mio_uds;
-             extern crate net2;
-             extern crate byteorder;
+//#[deny(missing_docs)]
+pub mod reactor;
 
-mod prevec;
-pub mod server;
-pub mod connections;
+//#[deny(missing_docs)]
+pub mod system;
+pub mod net;
+pub mod sync; 
 pub mod errors;
+mod prevec;
 
-// Pub uses
 pub use prevec::PreVec;
 
-// Reexports
-pub use mio::{Token, Ready, Event, Events, Poll, Evented};
+// Re-exports
+pub use mio::{Token, Event, Evented, PollOpt, Poll, Ready};
+
+pub mod prelude {
+    pub use mio::{Token, Event};
+    pub use crate::reactor::{Reaction, Reactive};
+    pub use crate::system::{SystemEvent, System};
+}
