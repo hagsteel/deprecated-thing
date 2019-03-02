@@ -112,49 +112,63 @@ impl<T, U> Reactive for And<T, U>
 
 
 // -----------------------------------------------------------------------------
-// 		- Callback -
+// 		- Noop -
 // -----------------------------------------------------------------------------
-pub struct Callback<S, F> {
-    source: S,
-    callback: F,
+/// Useful as the final reactor in a chain.
+/// Given a chain with two reactors the last reactor will never
+/// have `react` invoked as there is no receiving reactor to accept
+/// the output. Most cases this is not a problem unless the final
+/// reactor is using `.map`.
+///
+/// This also makes it possible to run a single reactor.
+///
+/// ```
+/// # use sonr::reactor::producers::EventedGenerator;
+/// # use sonr::prelude::*;
+/// # use sonr::errors::Result;
+/// # fn main() -> Result<()> {
+/// let handle = System::init()?;
+/// let numbers = EventedGenerator::new(vec![1, 2, 3])?
+///     .map(|number: usize| {
+///         // This closure is never called unless noop is called.
+///         eprintln!("{:?}", number * 2);
+///         handle.send(SystemEvent::Stop);
+///     });
+///
+/// // `numbers` has no receiving reactor for 
+/// // the output, hence the closure in `map` is never invoked.
+/// // However by adding a `noop()` call, numbers now has a recipient for the 
+/// // output and the closure in map will be invoked
+/// let run = numbers.noop();
+///
+/// System::start(run);
+/// # Ok(())
+/// # }
+/// ```
+pub struct Noop<T> {
+    _p: PhantomData<T>,
 }
 
-impl<S, F> Callback<S, F> {
-    pub fn new(source: S, callback: F) -> Self {
+impl<T> Noop<T> {
+    pub fn new() -> Self {
         Self { 
-            source,
-            callback,
+            _p: PhantomData,
         }
     }
 }
 
-impl<S, F> Reactive for Callback<S, F> 
-    where
-        S: Reactive,
-        F: FnMut(S::Output) -> S::Output,
-{
-    type Output = S::Output;
-    type Input = S::Input;
+impl<T> Reactive for Noop<T> {
+    type Output = ();
+    type Input = T;
 
     fn reacting(&mut self, event: Event) -> bool {
-        self.source.reacting(event)
-    }
-
-    fn react_to(&mut self, input: Self::Input) {
-        self.source.react_to(input);
-    }
-
-    fn react(&mut self) -> Reaction<Self::Output> {
-        match self.source.react() {
-            Reaction::Value(val) => Reaction::Value((self.callback)(val)),
-            Reaction::NoReaction => Reaction::NoReaction
-        }
+        false
     }
 }
 
 
 // -----------------------------------------------------------------------------
-// 		- Callback -
+// 		- Map -
 // -----------------------------------------------------------------------------
 pub struct Map<S, F, T> {
     source: S,

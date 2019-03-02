@@ -8,7 +8,7 @@ use super::system::System;
 pub mod combinators;
 pub mod producers;
 
-use combinators::{Chain, And, Callback, Map};
+use combinators::{Chain, And, Map, Noop};
 
 pub enum Reaction<T> {
     NoReaction,
@@ -55,6 +55,14 @@ pub trait Reactive : Sized {
         Chain::new(self, to)
     }
 
+    /// Create a chain with a [`Noop`] as the second
+    /// in the chain.
+    ///
+    /// [`Noop`]: combinators/struct.Noop.html
+    fn noop(self) -> Chain<Self, Noop<Self::Output>> {
+        Chain::new(self, Noop::new())
+    }
+
     /// Run two reactors independent of each other.
     /// ```no_run
     /// # use sonr::reactor::Reactive;
@@ -96,10 +104,6 @@ pub trait Reactive : Sized {
     /// # Ok(())
     /// # }
     /// ```
-    fn and_then<F>(self, callback: F) -> Callback<Self, F> {
-        Callback::new(self, callback)
-    }
-
     fn map<F, T>(self, callback: F) -> Map<Self, F, T> {
         Map::new(self, callback)
     }

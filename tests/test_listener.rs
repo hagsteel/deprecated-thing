@@ -56,7 +56,7 @@ fn test_listener() {
     let handle = thread::spawn(move || {
         System::init();
         let tcp = tcp::ReactiveTcpListener::bind("127.0.0.1:5555").unwrap();
-        let tcp = tcp.and_then(|(mut stream, addr): (tcp::TcpStream, _)| { 
+        let tcp = tcp.map(|(mut stream, addr): (tcp::TcpStream, _)| { 
             stream.write(&b"hi"[..]);
             (stream, addr) 
         });

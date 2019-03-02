@@ -47,7 +47,7 @@ fn test_broadcast() {
     let h1 = thread::spawn(move || {
         let sender = System::init().unwrap();
         let counter = Counter { sender, counter: 0 };
-        let subscriber = ReactiveSignalReceiver::new(s1).unwrap().and_then(|v| {
+        let subscriber = ReactiveSignalReceiver::new(s1).unwrap().map(|v| {
             eprintln!("-> thread 1: : {:?}", v);
             v
         }).chain(counter);
@@ -59,7 +59,7 @@ fn test_broadcast() {
     let h2 = thread::spawn(move || {
         let sender = System::init().unwrap();
         let counter = Counter { sender, counter: 0 };
-        let subscriber = ReactiveSignalReceiver::new(s2).unwrap().and_then(|v| {
+        let subscriber = ReactiveSignalReceiver::new(s2).unwrap().map(|v| {
             eprintln!("-> thread 2: : {:?}", v);
             v
         }).chain(counter);
@@ -131,7 +131,7 @@ fn test_bounded_broadcast() {
     let h1 = thread::spawn(move || {
         let sender = System::init().unwrap();
         let counter = Counter { sender, counter: 0 };
-        let subscriber = ReactiveSignalReceiver::new(s1).unwrap().and_then(|v| {
+        let subscriber = ReactiveSignalReceiver::new(s1).unwrap().map(|v| {
             eprintln!("-> thread 1: : {:?}", v);
             v
         }).chain(counter);
@@ -143,7 +143,7 @@ fn test_bounded_broadcast() {
     let h2 = thread::spawn(move || {
         let sender = System::init().unwrap();
         let counter = Counter { sender, counter: 0 };
-        let subscriber = ReactiveSignalReceiver::new(s2).unwrap().and_then(|v| {
+        let subscriber = ReactiveSignalReceiver::new(s2).unwrap().map(|v| {
             eprintln!("-> thread 2: : {:?}", v);
             v
         }).chain(counter);
