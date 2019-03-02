@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["EventedGenerator","The [`EventedGenerator`] reacts as soon as the [`System`] starts. ``` # use sonr::system::{System, SystemEvent}; # use sonr::reactor::Reactive; # use sonr::reactor::producers::EventedGenerator; fn main() {     let handle = System::init().unwrap();     let gen = EventedGenerator::new(vec![0u8]).unwrap();"]]});
