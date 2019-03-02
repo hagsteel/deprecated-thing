@@ -1,3 +1,12 @@
+//! Simple Opinionated Networking in Rust
+//!
+//! Sonr builds on the idea of chaining reactors together to form the flow of the application.
+//!
+//!
+//! ```text
+//! TcpListener -> Authentication -> Chat
+//! ```
+//!
 //#[deny(missing_docs)]
 pub mod reactor;
 

@@ -10,12 +10,18 @@ pub mod producers;
 
 use combinators::{Chain, And, Callback, Map};
 
-// -----------------------------------------------------------------------------
-// 		- Something that reacts -
-// -----------------------------------------------------------------------------
 pub enum Reaction<T> {
     NoReaction,
     Value(T),
+}
+
+impl<T> From<Option<T>> for Reaction<T> {
+    fn from(opt: Option<T>) -> Self {
+        match opt {
+            Some(val) => Reaction::Value(val),
+            None => Reaction::NoReaction
+        }
+    }
 }
 
 /// A reactor ...
