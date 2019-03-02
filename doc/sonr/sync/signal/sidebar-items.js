@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["ReactiveSignalReceiver","React when new data is ready to be received"],["SignalReceiver",""],["SignalSender",""]]});

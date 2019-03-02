@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Event","An readiness event returned by [`Poll::poll`]."],["Token","Associates readiness notifications with [`Evented`] handles."]]});
