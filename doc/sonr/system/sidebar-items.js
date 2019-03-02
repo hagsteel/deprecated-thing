@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["SystemEvent","Specific event the `System` responds to NOTE: There should only be one `System::init` call per thread The System handles registration and pushes `Event`s to the reactors passed to `System::start`."]],"struct":[["System",""]]});

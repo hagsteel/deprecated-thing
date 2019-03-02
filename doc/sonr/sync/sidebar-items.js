@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Capacity","Queue / Signal capacity"]],"mod":[["broadcast",""],["queue",""],["signal",""]]});

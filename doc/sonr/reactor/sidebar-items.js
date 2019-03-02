@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Reaction",""]],"mod":[["combinators",""],["producers",""]],"struct":[["EventedReactor","The `EventedReactor` is driven by the `System`. TODO more documentation"]],"trait":[["Reactive","A reactor ..."]]});
