@@ -1,4 +1,5 @@
 /target
+/benches
 **/*.rs.bk
 Cargo.lock
 perf.data*

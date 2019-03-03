@@ -123,12 +123,12 @@ impl<T, U> Reactive for And<T, U>
 /// This also makes it possible to run a single reactor.
 ///
 /// ```
-/// # use sonr::reactor::producers::EventedGenerator;
+/// # use sonr::reactor::producers::ReactiveGenerator;
 /// # use sonr::prelude::*;
 /// # use sonr::errors::Result;
 /// # fn main() -> Result<()> {
 /// let handle = System::init()?;
-/// let numbers = EventedGenerator::new(vec![1, 2, 3])?
+/// let numbers = ReactiveGenerator::new(vec![1, 2, 3])?
 ///     .map(|number: usize| {
 ///         // This closure is never called unless noop is called.
 ///         eprintln!("{:?}", number * 2);

@@ -1,32 +1,40 @@
-use std::fmt::{self, Formatter, Debug};
-use std::io::{self, Read, Write, ErrorKind::WouldBlock};
-use mio::{Evented, Event, Token, Ready};
+use mio::{Event, Evented, Ready, Token};
+use std::fmt::{self, Debug, Formatter};
+use std::io::{self, ErrorKind::WouldBlock, Read, Write};
 
-use crate::errors::Result;
 use super::system::System;
+use crate::errors::Result;
 
 pub mod combinators;
 pub mod producers;
 
-use combinators::{Chain, And, Map, Noop};
+use combinators::{And, Chain, Map, Noop};
 
 pub enum Reaction<T> {
     NoReaction,
     Value(T),
 }
 
+impl<T: Debug> Debug for Reaction<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &self {
+            Reaction::NoReaction => write!(f, "Reaction::NoReaction"),
+            Reaction::Value(val) => write!(f, "Reaction::Value({:?})", val),
+        }
+    }
+}
+
 impl<T> From<Option<T>> for Reaction<T> {
     fn from(opt: Option<T>) -> Self {
         match opt {
             Some(val) => Reaction::Value(val),
-            None => Reaction::NoReaction
+            None => Reaction::NoReaction,
         }
     }
 }
 
 /// A reactor ...
-pub trait Reactive : Sized {
-
+pub trait Reactive: Sized {
     /// The output passed to the next reactor in the chain.
     type Output;
 
@@ -40,7 +48,7 @@ pub trait Reactive : Sized {
     /// The generated output is passed as the input to the
     /// next reactor in the chain.
     ///
-    /// `react` is called repeatedly until the reaction returns 
+    /// `react` is called repeatedly until the reaction returns
     /// `Reaction::NoReaction`
     fn react(&mut self) -> Reaction<Self::Output> {
         Reaction::NoReaction
@@ -109,7 +117,6 @@ pub trait Reactive : Sized {
     }
 }
 
-
 // -----------------------------------------------------------------------------
 // 		- An evented Reactor -
 // -----------------------------------------------------------------------------
@@ -123,11 +130,18 @@ pub struct EventedReactor<E: Evented> {
     pub(crate) is_writable: bool,
 }
 
-impl<E> Debug for EventedReactor<E> 
-    where E: Debug + Evented,
+impl<E> Debug for EventedReactor<E>
+where
+    E: Debug + Evented,
 {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "({:?})", self)
+        f.debug_struct("EventedReactor")
+            .field("inner", &self.inner)
+            .field("token", &self.token)
+            .field("interest", &self.interest)
+            .field("is_readable", &self.is_readable)
+            .field("is_writable", &self.is_writable)
+            .finish()
     }
 }
 
@@ -166,7 +180,6 @@ impl<E: Evented> EventedReactor<E> {
     pub fn interest(&self) -> Ready {
         self.interest
     }
-
 }
 
 impl<E: Evented + Read> Read for EventedReactor<E> {
@@ -179,7 +192,12 @@ impl<E: Evented + Read> Read for EventedReactor<E> {
                 let res = System::reregister(&self);
                 match res {
                     Ok(()) => (),
-                    Err(e) => return Err(io::Error::new(io::ErrorKind::Other, format!("failed to reregister evented: {:?}", e))),
+                    Err(e) => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            format!("failed to reregister evented: {:?}", e),
+                        ));
+                    }
                 }
             }
             Err(_) => self.is_readable = false,
@@ -201,7 +219,12 @@ impl<E: Evented + Write> Write for EventedReactor<E> {
                 let res = System::reregister(&self);
                 match res {
                     Ok(()) => (),
-                    Err(e) => return Err(io::Error::new(io::ErrorKind::Other, format!("failed to reregister evented: {:?}", e))),
+                    Err(e) => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            format!("failed to reregister evented: {:?}", e),
+                        ));
+                    }
                 }
             }
             Err(_) => self.is_writable = false,
@@ -220,4 +243,4 @@ impl<E: Evented> Drop for EventedReactor<E> {
     fn drop(&mut self) {
         System::free_token(self.token());
     }
-} 
+}

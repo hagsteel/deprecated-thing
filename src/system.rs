@@ -148,4 +148,9 @@ impl System {
             Ok(Token(token))
         })
     } 
+
+    /// Send a system event to the current system.
+    pub fn send(sys_event: SystemEvent) {
+        with_system!(current, { current.rx.sender().send(sys_event) });
+    } 
 }

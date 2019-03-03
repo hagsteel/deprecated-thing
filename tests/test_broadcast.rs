@@ -8,7 +8,7 @@ use sonr::sync::broadcast::Broadcast;
 use sonr::sync::signal::{SignalSender, ReactiveSignalReceiver};
 use sonr::sync::queue::{ReactiveQueue, ReactiveDeque};
 use sonr::system::{System, SystemEvent};
-use sonr::reactor::producers::EventedGenerator;
+use sonr::reactor::producers::ReactiveGenerator;
 
 #[derive(Debug)]
 struct Counter {
@@ -85,7 +85,7 @@ fn test_broadcast() {
 #[test]
 fn test_bounded_queue() {
     let handle = System::init().unwrap();
-    let gen = EventedGenerator::new(vec![1u8, 2, 3, 4]).unwrap();
+    let gen = ReactiveGenerator::new(vec![1u8, 2, 3, 4]).unwrap();
     let mut queue = ReactiveQueue::bounded(1);
 
     let deque = queue.deque();
