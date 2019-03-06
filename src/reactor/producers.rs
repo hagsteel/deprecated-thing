@@ -1,6 +1,6 @@
 use std::mem;
 use std::collections::VecDeque;
-use mio::{Event, Registration, Ready, SetReadiness};
+use mio::{Registration, Ready, SetReadiness};
 use crate::errors::Result;
 
 use super::{Reactive, Reaction, EventedReactor};
@@ -43,18 +43,49 @@ impl<T> ReactiveGenerator<T> {
 
 impl<T> Reactive for ReactiveGenerator<T> {
     type Output = T;
-    type Input = T;
+    type Input = ();
 
-    fn reacting(&mut self, event: Event) -> bool {
-        self.reactor.token() == event.token()
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+        if let Reaction::Event(ev) = reaction {
+            if ev.token() != self.reactor.token() {
+                return Reaction::Event(ev)
+            }
+
+            if let Some(val) = self.inner.pop_front() {
+                return Reaction::Stream(val);
+            }
+        }
+
+        if let Reaction::NoReaction = reaction {
+            if let Some(val) = self.inner.pop_front() {
+                return Reaction::Stream(val);
+            }
+        }
+
+        match reaction {
+            Reaction::NoReaction => Reaction::NoReaction,
+            Reaction::Event(ev) => Reaction::Event(ev),
+            Reaction::Value(_) => Reaction::NoReaction,
+            Reaction::Stream(_) => Reaction::NoReaction,
+        }
     }
+}
 
-    fn react(&mut self) -> Reaction<Self::Output> {
-        self.inner.pop_front().into()
-    }
+/// Mono <-- TODO incomplete
+pub struct Mono<T> {
+    value: Reaction<T>
+}
 
-    fn react_to(&mut self, input: Self::Input) {
-        self.inner.push_back(input)
+impl<T> Reactive for Mono<T> {
+    type Input = ();
+    type Output = T;
+
+    fn react(&mut self, reaction: Reaction<()>) -> Reaction<Self::Output> {
+        let mut output = Reaction::NoReaction;
+        mem::swap(&mut self.value, &mut output);
+
+        // let _ = self.set_ready.set_readiness(Ready::readable());
+        output
     }
 }
 
@@ -86,7 +117,7 @@ impl<T> ReactiveConsumer<T> {
     pub fn new() -> Result<Self> {
         let (reg, set_ready) = Registration::new2();
         let reactor = EventedReactor::new(reg, Ready::readable())?;
-        set_ready.set_readiness(Ready::readable())?;
+        //set_ready.set_readiness(Ready::readable())?;
         Ok(Self { 
             reactor,
             reaction: Reaction::NoReaction,
@@ -99,24 +130,25 @@ impl<T> Reactive for ReactiveConsumer<T> {
     type Output = T;
     type Input = T;
 
-    fn reacting(&mut self, event: Event) -> bool {
-        let is = self.reactor.token() == event.token();
-        if is {
-            eprintln!("{:?}", "reacting");
-        }
-        is
+    // fn reacting(&mut self, event: Event) -> bool {
+    //     let is = self.reactor.token() == event.token();
+    //     if is {
+    //         eprintln!("{:?}", "reacting");
+    //     }
+    //     is
+    // }
+
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+        reaction
+        // let mut output = Reaction::NoReaction;
+        // mem::swap(&mut self.reaction, &mut output);
+        // //let _ = self.set_ready.set_readiness(Ready::readable());
+        // output
     }
 
-    fn react(&mut self) -> Reaction<Self::Output> {
-        let mut output = Reaction::NoReaction;
-        mem::swap(&mut self.reaction, &mut output);
-        let _ = self.set_ready.set_readiness(Ready::readable());
-        output
-    }
-
-    fn react_to(&mut self, input: Self::Input) {
-        eprintln!("{:?}", "reacting to");
-        let _ = self.set_ready.set_readiness(Ready::readable());
-        self.reaction = Reaction::Value(input);
-    }
+    // fn react_to(&mut self, input: Self::Input) {
+    //     eprintln!("{:?}", "reacting to");
+    //     let _ = self.set_ready.set_readiness(Ready::readable());
+    //     self.reaction = Reaction::Value(input);
+    // }
 }

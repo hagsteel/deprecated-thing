@@ -3,7 +3,7 @@ use std::fmt::{self, Debug};
 
 use crossbeam::channel::{Sender, Receiver, TrySendError};
 use crossbeam::channel::{unbounded as channel, bounded};
-use mio::{Poll, PollOpt, Registration, SetReadiness, Ready, Evented, Token, Event};
+use mio::{Poll, PollOpt, Registration, SetReadiness, Ready, Evented, Token};
 
 use crate::reactor::{Reactive, Reaction, EventedReactor};
 use crate::errors;
@@ -12,7 +12,7 @@ use super::Capacity;
 
 
 // -----------------------------------------------------------------------------
-// 		- Signal sender -
+//              - Signal sender -
 // -----------------------------------------------------------------------------
 pub struct SignalSender<T> {
     sender: Sender<T>,
@@ -23,12 +23,12 @@ impl<T> SignalSender<T> {
     fn new(sender: Sender<T>, set_readiness: SetReadiness) -> Self {
         Self {
             sender,
-            set_readiness, 
+            set_readiness,
         }
     }
 
     pub fn send(&self, val: T) -> Result<(), TrySendError<T>>{
-        self.set_readiness.set_readiness(Ready::readable());
+        let _ = self.set_readiness.set_readiness(Ready::readable());
         self.sender.send(val)?;
         Ok(())
     }
@@ -39,7 +39,7 @@ impl<T> Clone for SignalSender<T> {
         SignalSender::new(
             self.sender.clone(),
             self.set_readiness.clone(),
-        )
+            )
     }
 }
 
@@ -51,7 +51,7 @@ impl<T: Debug> Debug for SignalSender<T> {
 
 
 // -----------------------------------------------------------------------------
-// 		- Signal receiver -
+//              - Signal receiver -
 // -----------------------------------------------------------------------------
 pub struct SignalReceiver<T> {
     receiver: Receiver<T>,
@@ -92,7 +92,7 @@ impl<T> SignalReceiver<T> {
 
     fn with_sender_receiver(sender: Sender<T>, receiver: Receiver<T>) -> Self {
         let (registration, set_readiness) = Registration::new2();
-        Self { 
+        Self {
             receiver,
             registration,
 
@@ -119,7 +119,7 @@ impl<T> SignalReceiver<T> {
 
 
 // -----------------------------------------------------------------------------
-// 		- Reactive signal receiver -
+//              - Reactive signal receiver -
 // -----------------------------------------------------------------------------
 /// React when new data is ready to be received
 ///
@@ -128,15 +128,15 @@ impl<T> SignalReceiver<T> {
 /// # use sonr::prelude::*;
 /// # use sonr::sync::signal::{SignalReceiver, ReactiveSignalReceiver, SignalSender};
 /// # use sonr::sync::Capacity;
-/// 
+///
 /// # fn main() {
 /// let rx: SignalReceiver<u8> = SignalReceiver::unbounded();
 /// let tx = rx.sender();
-/// 
+///
 /// let handle = thread::spawn(move || {
 ///     let handle = System::init().unwrap();
 ///     let rx = ReactiveSignalReceiver::new(rx).unwrap();
-///     
+///
 ///     let run = rx.map(|val| {
 ///         // Received value, signaling System
 ///         // to stop
@@ -145,9 +145,9 @@ impl<T> SignalReceiver<T> {
 ///
 ///     System::start(run);
 /// });
-/// 
+///
 /// tx.send(123);
-/// 
+///
 /// handle.join();
 /// # }
 /// ```
@@ -156,7 +156,7 @@ pub struct ReactiveSignalReceiver<T> {
     inner: EventedReactor<SignalReceiver<T>>,
 }
 
-impl<T> ReactiveSignalReceiver<T> { 
+impl<T> ReactiveSignalReceiver<T> {
     pub fn new(inner: SignalReceiver<T>) -> errors::Result<Self> {
         Ok(Self {
             inner: EventedReactor::new(inner, Ready::readable())?,
@@ -194,16 +194,34 @@ impl<T: Send + 'static> Reactive for ReactiveSignalReceiver<T> {
     type Output = T;
     type Input = ();
 
-    fn reacting(&mut self, event: Event) -> bool {
-        self.inner.token() == event.token()
-    } 
+    // fn reacting(&mut self, event: Event) -> bool {
+    //     self.inner.token() == event.token()
+    // }
 
-    fn react_to(&mut self, _: Self::Input) { }
+    // fn react_to(&mut self, _: Self::Input) { }
 
-    fn react(&mut self) -> Reaction<Self::Output> {
-        match self.try_recv() {
-            Ok(val) => Reaction::Value(val), 
-            _ => Reaction::NoReaction
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+        if let Reaction::Event(event) = reaction {
+            if self.inner.token() == event.token() {
+                while let Ok(val) = self.try_recv() {
+                    return Reaction::Stream(val)
+                }
+            } else {
+                return Reaction::Event(event);
+            }
+        }
+
+        if let Reaction::NoReaction = reaction {
+            if let Ok(val) = self.try_recv() {
+                return Reaction::Stream(val);
+            }
+        }
+
+        match reaction {
+            Reaction::Event(e) => Reaction::Event(e),
+            Reaction::NoReaction => Reaction::NoReaction,
+            Reaction::Value(_) => Reaction::NoReaction,
+            Reaction::Stream(_) => Reaction::NoReaction,
         }
     }
 }

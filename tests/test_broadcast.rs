@@ -20,14 +20,13 @@ impl Reactive for Counter {
     type Output = ();
     type Input = String;
 
-    fn reacting(&mut self, _event: Event) -> bool { true }
-
-    fn react(&mut self) -> Reaction<Self::Output> { Reaction::NoReaction }
-    fn react_to(&mut self, input: Self::Input) {
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> { 
         self.counter += 1;
-        if self.counter == 2 {
+        //eprintln!("------ count: {} - {:?}", self.counter, reaction);
+        if self.counter == 4 {
             self.sender.send(SystemEvent::Stop);
         }
+        Reaction::NoReaction 
     }
 }
 
@@ -66,14 +65,23 @@ fn test_broadcast() {
         System::start(subscriber);
     });
 
+    // Give the queue some time
+    thread::sleep_ms(10);
+
     // First broadcasting thread
     let h3 = thread::spawn(move || {
         bc1.publish("first broadcast".into());
+        bc1.publish("ofloff broadcast".into());
+        bc1.publish("magic broadcast".into());
+        bc1.publish("pagic broadcast".into());
     });
 
     // Second broadcasting thread
     let h4 = thread::spawn(move || {
         bc2.publish("second broadcast".into());
+        bc2.publish("second magic broadcast".into());
+        bc2.publish("second ofloff broadcast".into());
+        bc2.publish("second pagic broadcast".into());
     });
 
     h1.join();
@@ -85,27 +93,30 @@ fn test_broadcast() {
 #[test]
 fn test_bounded_queue() {
     let handle = System::init().unwrap();
-    let gen = ReactiveGenerator::new(vec![1u8, 2, 3, 4]).unwrap();
+    let gen = ReactiveGenerator::new((1u8..=4).collect()).unwrap();
     let mut queue = ReactiveQueue::bounded(1);
 
     let deque = queue.deque();
 
     let thread_handle = thread::spawn(move || {
-        let handle = System::init().unwrap();
+        thread::sleep_ms(30);
+        let fo_handle = System::init().unwrap();
         let dq = ReactiveDeque::new(deque).unwrap();
         let run = dq.map(|s| {
-            eprintln!("in thread {:?}", s);
-            thread::sleep_ms(100);
+            eprintln!("<- rx: {:?}", s);
             if s == 4 {
-                handle.send(SystemEvent::Stop);
+                let fo_handle = fo_handle.clone();
+                thread::spawn(move || {
+                    fo_handle.send(SystemEvent::Stop);
+                });
             }
         });
         System::start(run);
+        eprintln!("{:?}", "DONE");
     });
 
     let run = gen.map(|i| {
-        eprintln!("in main {:?}", i);
-        if i == 4 { 
+        if i == 4 {
             handle.send(SystemEvent::Stop);
         }
         i

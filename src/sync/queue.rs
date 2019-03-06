@@ -1,7 +1,7 @@
 use std::io;
 
 use crossbeam::deque::{Worker, Stealer, Steal}; 
-use mio::{Poll, Event, Evented, Ready, PollOpt, Token};
+use mio::{Poll, Evented, Ready, PollOpt, Token};
 
 use crate::sync::signal::{SignalReceiver, SignalSender}; 
 use crate::reactor::{Reactive, EventedReactor, Reaction};
@@ -42,24 +42,24 @@ impl<T: Send + 'static> Reactive for ReactiveQueue<T> {
     type Output = ();
     type Input = T;
 
-    fn reacting(&mut self, _: Event) -> bool {
-        // The queue can never react to an event
-        // as it is not evented
-        false
-    } 
-
-    fn react_to(&mut self, value: Self::Input) {
-        self.push(value);
+    //fn react_to(&mut self, value: Self::Input) {
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+        if let Reaction::Value(value) = reaction {
+            self.push(value);
+            Reaction::Value(())
+        } else {
+            Reaction::NoReaction
+        }
     }
 
-    fn react(&mut self) -> Reaction<Self::Output> {
-        Reaction::Value(())
-    }
+    // fn react(&mut self) -> Reaction<Self::Output> {
+    //     Reaction::Value(())
+    // }
 }
 
 
 // -----------------------------------------------------------------------------
-// 		- Queue -
+// 		- Work-stealing Queue -
 // -----------------------------------------------------------------------------
 pub struct Queue<T> {
     worker: Worker<T>,
@@ -92,7 +92,9 @@ impl<T: Send + 'static> Queue<T> {
     pub fn push(&self, val: T) {
         self.worker.push(val);
         // Notify all
-        self.publishers.iter().for_each(|p| { let _ = p.send(()); });
+        self.publishers.iter().for_each(|p| { 
+            let _ = p.send(()); 
+        });
     }
 
     pub fn deque(&mut self) -> Dequeue<T> {
@@ -120,8 +122,14 @@ impl<T> ReactiveDeque<T> {
         })
     }
 
-    pub fn steal(&self) -> Steal<T> {
-        self.inner.inner().steal()
+    fn steal(&self) -> Reaction<T> {
+        loop {
+            match self.inner.inner().steal() {
+                Steal::Retry => continue,
+                Steal::Success(val) => break Reaction::Stream(val),
+                Steal::Empty => break Reaction::NoReaction,
+            }
+        }
     }
 }
 
@@ -129,17 +137,17 @@ impl<T> Reactive for ReactiveDeque<T> {
     type Output = T;
     type Input = ();
 
-    fn reacting(&mut self, event: Event) -> bool {
-        event.token() == self.inner.token()
-    }
-
-    fn react(&mut self) -> Reaction<Self::Output> {
-        loop {
-            match self.inner.inner().steal() {
-                Steal::Success(val) => break Reaction::Value(val),
-                Steal::Retry => continue,
-                Steal::Empty => break Reaction::NoReaction,
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+        match reaction {
+            Reaction::Event(event) => {
+                if event.token() != self.inner.token() {
+                    return Reaction::Event(event);
+                }
+                self.steal()
             }
+            Reaction::Value(_) => Reaction::NoReaction,
+            Reaction::Stream(_) => Reaction::NoReaction,
+            Reaction::NoReaction => self.steal(),
         }
     }
 }
@@ -176,7 +184,10 @@ impl<T> Dequeue<T> {
     }
 
     pub fn steal(&self) -> Steal<T> {
-        self.signal.try_recv();
+        match self.signal.try_recv() {
+            Ok(()) => {},
+            Err(e) => { eprintln!("{:?}", e);}
+        }
         self.stealer.steal()
     }
 }

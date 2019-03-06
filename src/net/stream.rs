@@ -65,18 +65,28 @@ impl<T: Read + Write + Evented> Reactive for Stream<T> {
     type Output = ();
     type Input = ();
 
-    fn reacting(&mut self, event: Event) -> bool {
-        if event.token() == self.inner.token() {
+    // fn reacting(&mut self, event: Event) -> bool {
+    //     if event.token() == self.inner.token() {
+    //         self.inner.is_readable |= event.readiness().is_readable();
+    //         self.inner.is_writable |= event.readiness().is_writable();
+    //         true
+    //     } else {
+    //         false
+    //     }
+    // }
+
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+        if let Reaction::Event(event) = reaction {
+            if event.token() != self.inner.token() {
+                return reaction;
+            }
+
             self.inner.is_readable |= event.readiness().is_readable();
             self.inner.is_writable |= event.readiness().is_writable();
-            true
-        } else {
-            false
+            return Reaction::Value(());
         }
-    }
 
-    fn react(&mut self) -> Reaction<Self::Output> {
-        Reaction::NoReaction
+        reaction
     }
 }
 

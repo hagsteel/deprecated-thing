@@ -5,10 +5,14 @@ use sonr::errors::Result;
 #[test]
 fn test_consumer() -> Result<()> {
     let handle = System::init()?;
+
     let gen = ReactiveGenerator::new(vec![1, 2, 3, 4])?.map(|n| {
+        eprintln!("orig: {:?}", n);
         n
     });
+
     let multiplier = ReactiveConsumer::new()?.map(|n| {
+        eprintln!("con {:?}", n * 2);
         n * 2
     });
 
@@ -18,7 +22,8 @@ fn test_consumer() -> Result<()> {
         }
     });
 
-    let run = gen.chain(multiplier.chain(printer.noop()));
+    //let run = gen.chain(multiplier.chain(printer.noop()));
+    let run = gen.chain(multiplier.chain(printer));
 
     System::start(run);
     Ok(())

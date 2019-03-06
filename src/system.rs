@@ -19,6 +19,7 @@ thread_local! {
 #[derive(Debug)]
 pub enum SystemEvent {
     Stop,
+    Dummy
 }
 
 pub struct System {
@@ -118,19 +119,44 @@ impl System {
                 if event.token() == SERVER_TOKEN { 
                     let sys_events = with_system!(current, {
                         let mut sys_events = Vec::new();
-                        while let Ok(sys_event) = current.rx.try_recv() {
+                        if let Ok(sys_event) = current.rx.try_recv() {
                             sys_events.push(sys_event);
                         }
                         sys_events
                     });
 
+                    eprintln!("{:?}", sys_events);
                     for sys_event in sys_events {
                         match sys_event {
                             SystemEvent::Stop => break 'system,
+                            SystemEvent::Dummy => {
+                                // TODO: remove this
+                                eprintln!("{:?}", "received DUMMY event");
+                            }
                         }
                     }
-                } else if reactor.reacting(event) {
-                    while let Reaction::Value(_) = reactor.react() { }
+                } else {
+                    let reaction = reactor.react(Reaction::Event(event));
+
+                    if let Reaction::Stream(_) = reaction {
+                        while let Reaction::Stream(_) = reactor.react(Reaction::NoReaction) { }
+                    } 
+
+                    // TODO: remove this, remnants from old
+                    // reactor.react(Reaction::Event(event));
+                    // while let Reaction::Value(_) = reactor.react(Reaction::NoReaction) { }
+                    // if let Reaction::Value(_) = reaction {
+                    //     while let Reaction::Value(_) = reactor.react(Reaction::NoReaction) { }
+                    // }
+
+                    // TODO: check while
+                    // while let Reaction::Value(_) = reactor.react(Reaction::Event(event)) {}
+                    // match x {
+                    //     Reaction::NoReaction => eprintln!("{:?}", "NoReaction"),
+                    //     Reaction::Value(val) => eprintln!("{:?}", "Value"),
+                    //     Reaction::Event(event) => eprintln!("{:?}", "Event"),
+                    // }
+                    //while let Reaction::Value(_) = reactor.react() { }
                 }
             }
         }

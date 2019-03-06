@@ -1,7 +1,5 @@
 use std::sync::{Arc, Mutex};
 
-use mio::Event;
-
 use crate::sync::signal::{SignalReceiver, SignalSender};
 use crate::reactor::{Reaction, Reactive};
 
@@ -80,10 +78,22 @@ impl<T: Clone> Reactive for ReactiveBroadcast<T> {
     type Input = T;
 
     // Isn't Evented so doesn't react
-    fn reacting(&mut self, _: Event) -> bool { false }
+    //fn reacting(&mut self, _: Event) -> bool { false }
 
-    fn react(&mut self) -> Reaction<Self::Output> { Reaction::NoReaction }
-    fn react_to(&mut self, input: Self::Input) {
-        self.inner.publish(input)
+    //fn react(&mut self) -> Reaction<Self::Output> { Reaction::NoReaction }
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+        match reaction {
+            Reaction::Value(val) => {
+                self.inner.publish(val);
+                Reaction::Value(())
+            },
+            Reaction::Stream(_) => unreachable!("NO"),
+            Reaction::Event(e) => Reaction::Event(e),
+            Reaction::NoReaction => Reaction::NoReaction,
+        }
     }
+
+    // fn react_to(&mut self, input: Self::Input) {
+    //     self.inner.publish(input)
+    // }
 }

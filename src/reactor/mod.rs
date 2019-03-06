@@ -12,23 +12,30 @@ use combinators::{And, Chain, Map, Noop};
 
 pub enum Reaction<T> {
     NoReaction,
+    Event(Event),
     Value(T),
+    Stream(T),
+}
+
+// TODO: remove this
+impl<T> Reaction<T> {
+    fn print(&self) {
+        match self {
+            Reaction::NoReaction => eprintln!("{:?}", "NO REACTION"),
+            Reaction::Value(_) => eprintln!("{:?}", "VALUE"),
+            Reaction::Stream(_) => eprintln!("{:?}", "STREAM"),
+            Reaction::Event(_) => eprintln!("{:?}", "EVENT"),
+        }
+    }
 }
 
 impl<T: Debug> Debug for Reaction<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self {
             Reaction::NoReaction => write!(f, "Reaction::NoReaction"),
+            Reaction::Event(event) => write!(f, "Reaction::Event({:?})", event),
             Reaction::Value(val) => write!(f, "Reaction::Value({:?})", val),
-        }
-    }
-}
-
-impl<T> From<Option<T>> for Reaction<T> {
-    fn from(opt: Option<T>) -> Self {
-        match opt {
-            Some(val) => Reaction::Value(val),
-            None => Reaction::NoReaction,
+            Reaction::Stream(val) => write!(f, "Reaction::Stream({:?})", val),
         }
     }
 }
@@ -41,21 +48,14 @@ pub trait Reactive: Sized {
     /// Expected input type from the previous reactor in the chain.
     type Input;
 
-    /// If `reacting` returns `true`, `react` is called and pushes the program
-    /// forward.
-    fn reacting(&mut self, _event: Event) -> bool;
-
     /// The generated output is passed as the input to the
     /// next reactor in the chain.
     ///
     /// `react` is called repeatedly until the reaction returns
     /// `Reaction::NoReaction`
-    fn react(&mut self) -> Reaction<Self::Output> {
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
         Reaction::NoReaction
     }
-
-    /// React to the input of another reactor.
-    fn react_to(&mut self, _input: Self::Input) {}
 
     /// Chain two reactors together.
     /// The output of the first reactor is the input of the second reactor.
@@ -63,6 +63,7 @@ pub trait Reactive: Sized {
         Chain::new(self, to)
     }
 
+    // TODO: might be redundant
     /// Create a chain with a [`Noop`] as the second
     /// in the chain.
     ///

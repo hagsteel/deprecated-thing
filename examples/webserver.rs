@@ -7,7 +7,7 @@ use std::thread;
 use sonr::{Token, Event};
 use sonr::errors::Result;
 use sonr::net::tcp::{ReactiveTcpListener, ReactiveTcpStream, TcpStream};
-use sonr::reactor::Reactive;
+use sonr::reactor::{Reactive, Reaction};
 use sonr::system::System;
 use sonr::sync::queue::{ReactiveDeque, ReactiveQueue};
 
@@ -25,15 +25,12 @@ struct Connections {
     inner: HashMap<Token, ReactiveTcpStream>
 }
 
-impl Reactive for Connections {
-    type Input = (TcpStream, SocketAddr);
-    type Output = ();
-
-    fn reacting(&mut self, event: Event) -> bool {
+impl Connections {
+    fn handle_connection_event(&mut self, event: Event) -> bool {
         let reacting = self.inner.get(&event.token()).is_some();
 
         let stream = self.inner.remove(&event.token()).map(|mut stream| {
-            stream.reacting(event);
+            stream.react(Reaction::Event(event));
             while stream.writable() {
                 match stream.write(&RESPONSE) { 
                     Ok(_) => {},
@@ -51,12 +48,36 @@ impl Reactive for Connections {
 
         reacting
     }
+}
 
-    fn react_to(&mut self, input: Self::Input) {
-        let (stream, _) = input; // ignore address 
-        let tcp_stream = ReactiveTcpStream::new(stream).unwrap(); 
-        self.inner.insert(tcp_stream.token(), tcp_stream);
+impl Reactive for Connections {
+    type Input = (TcpStream, SocketAddr);
+    type Output = ();
+
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+        match reaction {
+            Reaction::Value(input) => {
+                let (stream, _) = input; // ignore address 
+                let tcp_stream = ReactiveTcpStream::new(stream).unwrap(); 
+                self.inner.insert(tcp_stream.token(), tcp_stream);
+                Reaction::NoReaction
+            }
+            Reaction::Event(event) => {
+                match self.handle_connection_event(event) {
+                    true => Reaction::NoReaction,
+                    false => Reaction::Event(event)
+                }
+            }
+            Reaction::Stream(_) => Reaction::NoReaction,
+            Reaction::NoReaction => Reaction::NoReaction,
+        } 
     }
+
+    // fn react_to(&mut self, input: Self::Input) {
+    //     let (stream, _) = input; // ignore address 
+    //     let tcp_stream = ReactiveTcpStream::new(stream).unwrap(); 
+    //     self.inner.insert(tcp_stream.token(), tcp_stream);
+    // }
 }
 
 fn main() -> Result<()> {

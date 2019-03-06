@@ -1,7 +1,7 @@
 use std::io::ErrorKind::WouldBlock;
 use std::os::unix::net::SocketAddr;
 
-use mio::{Event, Ready, Token};
+use mio::{Ready, Token};
 
 use crate::reactor::Reactive;
 use crate::reactor::{Reaction, EventedReactor};
@@ -38,22 +38,46 @@ impl Reactive for ReactiveUdsListener {
     type Output = (UnixStream, SocketAddr);
     type Input = ();
 
-    fn reacting(&mut self, event: Event) -> bool { //Reaction<Self::Output> {
-        self.inner.token() == event.token()
-    }
+    // fn reacting(&mut self, event: Event) -> bool { //Reaction<Self::Output> {
+    //     self.inner.token() == event.token()
+    // }
 
-    fn react(&mut self) -> Reaction<Self::Output> {
-        let res = self.inner.inner().accept();
-        match res {
-            Ok(Some(val)) => return Reaction::Value(val),
-            Ok(None) => { }
-            Err(ref e) if e.kind() == WouldBlock => {
-                System::reregister(&self.inner).unwrap();
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+        if let Reaction::Event(event) = reaction {
+            if self.inner.token() == event.token() {
+                let res = self.inner.inner().accept();
+                match res {
+                    Ok(Some(val)) => return Reaction::Stream(val),
+                    Ok(None) => return Reaction::NoReaction,
+                    Err(ref e) if e.kind() == WouldBlock => {
+                        System::reregister(&self.inner).unwrap();
+                        return Reaction::NoReaction
+                    }
+                    Err(_) => return Reaction::NoReaction,
+                }
             }
-            Err(_) => (),
         }
-        Reaction::NoReaction
-    }
+
+        if let Reaction::NoReaction = reaction {
+                let res = self.inner.inner().accept();
+                match res {
+                    Ok(Some(val)) => return Reaction::Stream(val),
+                    Ok(None) => return Reaction::NoReaction,
+                    Err(ref e) if e.kind() == WouldBlock => {
+                        System::reregister(&self.inner).unwrap();
+                        return Reaction::NoReaction
+                    }
+                    Err(_) => return Reaction::NoReaction,
+                }
+        }
+
+        match reaction {
+            Reaction::Event(e) => Reaction::Event(e),
+            Reaction::NoReaction => Reaction::NoReaction,
+            Reaction::Value(val) => Reaction::NoReaction,
+            Reaction::Stream(val) => Reaction::NoReaction,
+        } 
+    } 
 }
 
 
