@@ -6,7 +6,7 @@ use crate::PreVec;
 use crate::sync::signal::{SignalReceiver, SignalSender};
 use crate::errors::Result;
 
-use super::reactor::{Reactive, EventedReactor, Reaction};
+use super::reactor::{Reactor, EventedReactor, Reaction};
 
 thread_local! {
     static CURRENT_SYSTEM: RefCell<Option<System>> = RefCell::new(None);
@@ -19,7 +19,6 @@ thread_local! {
 #[derive(Debug)]
 pub enum SystemEvent {
     Stop,
-    Dummy
 }
 
 pub struct System {
@@ -109,7 +108,7 @@ impl System {
     /// This will run until `SystemEvent::Stop` is sent to the system's `SignalReceiver`.
     ///
     /// The `SignalReceiver` is returned from `System::init()`.
-    pub fn start<R: Reactive>(mut reactor: R) -> Result<()> {
+    pub fn start<R: Reactor>(mut reactor: R) -> Result<()> {
         let mut events = Events::with_capacity(1024);
 
         'system: loop {
@@ -129,34 +128,14 @@ impl System {
                     for sys_event in sys_events {
                         match sys_event {
                             SystemEvent::Stop => break 'system,
-                            SystemEvent::Dummy => {
-                                // TODO: remove this
-                                eprintln!("{:?}", "received DUMMY event");
-                            }
                         }
                     }
                 } else {
                     let reaction = reactor.react(Reaction::Event(event));
 
-                    if let Reaction::Stream(_) = reaction {
-                        while let Reaction::Stream(_) = reactor.react(Reaction::NoReaction) { }
+                    if let Reaction::Value(_) = reaction {
+                        while let Reaction::Value(_) = reactor.react(Reaction::Continue) { }
                     } 
-
-                    // TODO: remove this, remnants from old
-                    // reactor.react(Reaction::Event(event));
-                    // while let Reaction::Value(_) = reactor.react(Reaction::NoReaction) { }
-                    // if let Reaction::Value(_) = reaction {
-                    //     while let Reaction::Value(_) = reactor.react(Reaction::NoReaction) { }
-                    // }
-
-                    // TODO: check while
-                    // while let Reaction::Value(_) = reactor.react(Reaction::Event(event)) {}
-                    // match x {
-                    //     Reaction::NoReaction => eprintln!("{:?}", "NoReaction"),
-                    //     Reaction::Value(val) => eprintln!("{:?}", "Value"),
-                    //     Reaction::Event(event) => eprintln!("{:?}", "Event"),
-                    // }
-                    //while let Reaction::Value(_) = reactor.react() { }
                 }
             }
         }

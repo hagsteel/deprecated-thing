@@ -5,7 +5,7 @@ use crossbeam::channel::{Sender, Receiver, TrySendError};
 use crossbeam::channel::{unbounded as channel, bounded};
 use mio::{Poll, PollOpt, Registration, SetReadiness, Ready, Evented, Token};
 
-use crate::reactor::{Reactive, Reaction, EventedReactor};
+use crate::reactor::{Reactor, Reaction, EventedReactor};
 use crate::errors;
 
 use super::Capacity;
@@ -190,7 +190,7 @@ impl<T> Evented for SignalReceiver<T> {
     }
 }
 
-impl<T: Send + 'static> Reactive for ReactiveSignalReceiver<T> {
+impl<T: Send + 'static> Reactor for ReactiveSignalReceiver<T> {
     type Output = T;
     type Input = ();
 
@@ -204,24 +204,23 @@ impl<T: Send + 'static> Reactive for ReactiveSignalReceiver<T> {
         if let Reaction::Event(event) = reaction {
             if self.inner.token() == event.token() {
                 while let Ok(val) = self.try_recv() {
-                    return Reaction::Stream(val)
+                    return Reaction::Value(val)
                 }
             } else {
                 return Reaction::Event(event);
             }
         }
 
-        if let Reaction::NoReaction = reaction {
+        if let Reaction::Continue = reaction {
             if let Ok(val) = self.try_recv() {
-                return Reaction::Stream(val);
+                return Reaction::Value(val);
             }
         }
 
         match reaction {
             Reaction::Event(e) => Reaction::Event(e),
-            Reaction::NoReaction => Reaction::NoReaction,
-            Reaction::Value(_) => Reaction::NoReaction,
-            Reaction::Stream(_) => Reaction::NoReaction,
+            Reaction::Continue => Reaction::Continue,
+            Reaction::Value(_) => Reaction::Continue,
         }
     }
 }

@@ -7,7 +7,7 @@ use std::thread;
 use sonr::{Token, Event};
 use sonr::errors::Result;
 use sonr::net::tcp::{ReactiveTcpListener, ReactiveTcpStream, TcpStream};
-use sonr::reactor::{Reactive, Reaction};
+use sonr::reactor::{Reactor, Reaction};
 use sonr::system::System;
 use sonr::sync::queue::{ReactiveDeque, ReactiveQueue};
 
@@ -50,7 +50,7 @@ impl Connections {
     }
 }
 
-impl Reactive for Connections {
+impl Reactor for Connections {
     type Input = (TcpStream, SocketAddr);
     type Output = ();
 
@@ -60,24 +60,17 @@ impl Reactive for Connections {
                 let (stream, _) = input; // ignore address 
                 let tcp_stream = ReactiveTcpStream::new(stream).unwrap(); 
                 self.inner.insert(tcp_stream.token(), tcp_stream);
-                Reaction::NoReaction
+                Reaction::Continue
             }
             Reaction::Event(event) => {
                 match self.handle_connection_event(event) {
-                    true => Reaction::NoReaction,
+                    true => Reaction::Continue,
                     false => Reaction::Event(event)
                 }
             }
-            Reaction::Stream(_) => Reaction::NoReaction,
-            Reaction::NoReaction => Reaction::NoReaction,
+            Reaction::Continue => Reaction::Continue,
         } 
     }
-
-    // fn react_to(&mut self, input: Self::Input) {
-    //     let (stream, _) = input; // ignore address 
-    //     let tcp_stream = ReactiveTcpStream::new(stream).unwrap(); 
-    //     self.inner.insert(tcp_stream.token(), tcp_stream);
-    // }
 }
 
 fn main() -> Result<()> {

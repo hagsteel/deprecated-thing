@@ -4,7 +4,7 @@ use crossbeam::deque::{Worker, Stealer, Steal};
 use mio::{Poll, Evented, Ready, PollOpt, Token};
 
 use crate::sync::signal::{SignalReceiver, SignalSender}; 
-use crate::reactor::{Reactive, EventedReactor, Reaction};
+use crate::reactor::{Reactor, EventedReactor, Reaction};
 use crate::errors::Result;
 
 use super::Capacity;
@@ -38,7 +38,7 @@ impl<T: Send + 'static> ReactiveQueue<T> {
     }
 }
 
-impl<T: Send + 'static> Reactive for ReactiveQueue<T> {
+impl<T: Send + 'static> Reactor for ReactiveQueue<T> {
     type Output = ();
     type Input = T;
 
@@ -48,7 +48,7 @@ impl<T: Send + 'static> Reactive for ReactiveQueue<T> {
             self.push(value);
             Reaction::Value(())
         } else {
-            Reaction::NoReaction
+            Reaction::Continue
         }
     }
 
@@ -126,14 +126,14 @@ impl<T> ReactiveDeque<T> {
         loop {
             match self.inner.inner().steal() {
                 Steal::Retry => continue,
-                Steal::Success(val) => break Reaction::Stream(val),
-                Steal::Empty => break Reaction::NoReaction,
+                Steal::Success(val) => break Reaction::Value(val),
+                Steal::Empty => break Reaction::Continue,
             }
         }
     }
 }
 
-impl<T> Reactive for ReactiveDeque<T> {
+impl<T> Reactor for ReactiveDeque<T> {
     type Output = T;
     type Input = ();
 
@@ -145,9 +145,8 @@ impl<T> Reactive for ReactiveDeque<T> {
                 }
                 self.steal()
             }
-            Reaction::Value(_) => Reaction::NoReaction,
-            Reaction::Stream(_) => Reaction::NoReaction,
-            Reaction::NoReaction => self.steal(),
+            Reaction::Value(_) => Reaction::Continue,
+            Reaction::Continue => self.steal(),
         }
     }
 }
@@ -186,7 +185,7 @@ impl<T> Dequeue<T> {
     pub fn steal(&self) -> Steal<T> {
         match self.signal.try_recv() {
             Ok(()) => {},
-            Err(e) => { eprintln!("{:?}", e);}
+            Err(e) => { /* dbg!(e); */ }
         }
         self.stealer.steal()
     }

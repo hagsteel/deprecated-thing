@@ -11,19 +11,17 @@ pub mod producers;
 use combinators::{And, Chain, Map, Noop};
 
 pub enum Reaction<T> {
-    NoReaction,
+    Continue,
     Event(Event),
     Value(T),
-    Stream(T),
 }
 
 // TODO: remove this
 impl<T> Reaction<T> {
     fn print(&self) {
         match self {
-            Reaction::NoReaction => eprintln!("{:?}", "NO REACTION"),
+            Reaction::Continue => eprintln!("{:?}", "NO REACTION"),
             Reaction::Value(_) => eprintln!("{:?}", "VALUE"),
-            Reaction::Stream(_) => eprintln!("{:?}", "STREAM"),
             Reaction::Event(_) => eprintln!("{:?}", "EVENT"),
         }
     }
@@ -32,16 +30,15 @@ impl<T> Reaction<T> {
 impl<T: Debug> Debug for Reaction<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self {
-            Reaction::NoReaction => write!(f, "Reaction::NoReaction"),
+            Reaction::Continue => write!(f, "Reaction::Continue"),
             Reaction::Event(event) => write!(f, "Reaction::Event({:?})", event),
             Reaction::Value(val) => write!(f, "Reaction::Value({:?})", val),
-            Reaction::Stream(val) => write!(f, "Reaction::Stream({:?})", val),
         }
     }
 }
 
 /// A reactor ...
-pub trait Reactive: Sized {
+pub trait Reactor: Sized {
     /// The output passed to the next reactor in the chain.
     type Output;
 
@@ -52,14 +49,14 @@ pub trait Reactive: Sized {
     /// next reactor in the chain.
     ///
     /// `react` is called repeatedly until the reaction returns
-    /// `Reaction::NoReaction`
+    /// `Reaction::Continue`
     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
-        Reaction::NoReaction
+        Reaction::Continue
     }
 
     /// Chain two reactors together.
     /// The output of the first reactor is the input of the second reactor.
-    fn chain<T: Reactive>(self, to: T) -> Chain<Self, T> {
+    fn chain<T: Reactor>(self, to: T) -> Chain<Self, T> {
         Chain::new(self, to)
     }
 
@@ -74,7 +71,7 @@ pub trait Reactive: Sized {
 
     /// Run two reactors independent of each other.
     /// ```no_run
-    /// # use sonr::reactor::Reactive;
+    /// # use sonr::reactor::Reactor;
     /// # use sonr::errors::Result;
     /// use sonr::system::System;
     /// use sonr::net::tcp::ReactiveTcpListener;
@@ -88,7 +85,7 @@ pub trait Reactive: Sized {
     /// #   Ok(())
     /// }
     /// ```
-    fn and<C: Reactive>(self, second: C) -> And<Self, C> {
+    fn and<C: Reactor>(self, second: C) -> And<Self, C> {
         And::new(self, second)
     }
 

@@ -5,7 +5,7 @@ use mio::{Ready, Token};
 
 use crate::errors::Result;
 use crate::net::stream::Stream;
-use crate::reactor::Reactive;
+use crate::reactor::Reactor;
 use crate::reactor::{EventedReactor, Reaction};
 use crate::system::System;
 
@@ -40,7 +40,7 @@ impl ReactiveTcpListener {
     }
 }
 
-impl Reactive for ReactiveTcpListener {
+impl Reactor for ReactiveTcpListener {
     type Output = (mio::net::TcpStream, SocketAddr);
     type Input = ();
 
@@ -53,35 +53,33 @@ impl Reactive for ReactiveTcpListener {
             if self.inner.token() == event.token() {
                 let res = self.inner.inner().accept();
                 match res {
-                    Ok(val) => return Reaction::Stream(val),
+                    Ok(val) => return Reaction::Value(val),
                     Err(ref e) if e.kind() == WouldBlock => {
                         System::reregister(&self.inner).unwrap();
-                        return Reaction::NoReaction
+                        return Reaction::Continue
                     }
-                    Err(_) => return Reaction::NoReaction,
+                    Err(_) => return Reaction::Continue,
                 }
             } else {
                 return Reaction::Event(event);
             }
         }
 
-        if let Reaction::NoReaction = reaction {
+        if let Reaction::Continue = reaction {
             let res = self.inner.inner().accept();
             match res {
-                Ok(val) => return Reaction::Stream(val),
+                Ok(val) => return Reaction::Value(val),
                 Err(ref e) if e.kind() == WouldBlock => {
                     System::reregister(&self.inner).unwrap();
-                    return Reaction::NoReaction
+                    return Reaction::Continue
                 }
-                Err(_) => return Reaction::NoReaction,
+                Err(_) => return Reaction::Continue,
             }
         }
 
         match reaction {
             Reaction::Event(e) => Reaction::Event(e),
-            Reaction::NoReaction => Reaction::NoReaction,
-            Reaction::Value(val) => Reaction::NoReaction,
-            Reaction::Stream(val) => Reaction::NoReaction,
+            _ => Reaction::Continue,
         } 
     } 
 }

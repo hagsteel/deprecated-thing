@@ -24,6 +24,6 @@ pub use mio::{Token, Event, Evented, PollOpt, Poll, Ready};
 
 pub mod prelude {
     pub use mio::{Token, Event};
-    pub use crate::reactor::{Reaction, Reactive};
+    pub use crate::reactor::{Reaction, Reactor};
     pub use crate::system::{SystemEvent, System};
 }

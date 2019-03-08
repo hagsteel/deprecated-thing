@@ -3,7 +3,7 @@ use std::thread;
 
 use mio::Event;
 
-use sonr::reactor::{Reactive, Reaction};
+use sonr::reactor::{Reactor, Reaction};
 use sonr::sync::broadcast::Broadcast;
 use sonr::sync::signal::{SignalSender, ReactiveSignalReceiver};
 use sonr::sync::queue::{ReactiveQueue, ReactiveDeque};
@@ -16,7 +16,7 @@ struct Counter {
     counter: u8,
 }
 
-impl Reactive for Counter {
+impl Reactor for Counter {
     type Output = ();
     type Input = String;
 
@@ -26,7 +26,7 @@ impl Reactive for Counter {
         if self.counter == 4 {
             self.sender.send(SystemEvent::Stop);
         }
-        Reaction::NoReaction 
+        Reaction::Continue 
     }
 }
 

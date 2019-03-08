@@ -3,7 +3,7 @@ use std::io::{self, Read, Write};
 
 use mio::{Event, Ready, Token, Evented};
 
-use crate::reactor::Reactive;
+use crate::reactor::Reactor;
 use crate::reactor::{Reaction, EventedReactor};
 use crate::errors::Result;
 
@@ -61,7 +61,7 @@ impl<T: Read + Write + Evented> Stream<T> {
     }
 }
 
-impl<T: Read + Write + Evented> Reactive for Stream<T> {
+impl<T: Read + Write + Evented> Reactor for Stream<T> {
     type Output = ();
     type Input = ();
 

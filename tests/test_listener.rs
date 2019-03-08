@@ -1,5 +1,5 @@
 use sonr::net::{stream, tcp};
-use sonr::reactor::{Reaction, Reactive};
+use sonr::reactor::{Reaction, Reactor};
 use sonr::sync::signal::SignalSender;
 use sonr::system::{System, SystemEvent};
 use sonr::Event;
@@ -24,7 +24,7 @@ impl TcpClient {
     }
 }
 
-impl Reactive for TcpClient {
+impl Reactor for TcpClient {
     type Output = ();
     type Input = ();
 
@@ -67,7 +67,7 @@ impl Reactive for TcpClient {
             // }
         }
 
-        Reaction::NoReaction
+        Reaction::Continue
     }
 }
 
