@@ -51,7 +51,7 @@ impl<T: Clone> Broadcast<T> {
                     sub.send(val_c);
                 }
             }
-            Err(e) => { eprintln!("mutex error: {:?}", e); }
+            Err(e) => { /* Mutex error: ignored for now */ }
         }
 
     }

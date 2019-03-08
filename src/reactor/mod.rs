@@ -103,7 +103,6 @@ pub trait Reactor: Sized {
     /// let listener = tcp::ReactiveTcpListener::bind("127.0.0.1:5000")?;
     /// let queue = ReactiveQueue::unbounded();
     /// let server = listener.map(|(stream, addr)| {
-    ///     eprintln!("address is: {:?}", addr);
     ///     stream
     /// }).chain(queue);
     /// System::start(server);

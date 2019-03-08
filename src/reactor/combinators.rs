@@ -100,62 +100,60 @@ where
     // }
 }
 
-// -----------------------------------------------------------------------------
-// 		- Noop -
-// -----------------------------------------------------------------------------
-/// Useful as the final reactor in a chain.
-/// Given a chain with two reactors the last reactor will never
-/// have `react` invoked as there is no receiving reactor to accept
-/// the output. Most cases this is not a problem unless the final
-/// reactor is using `.map`.
-///
-/// This also makes it possible to run a single reactor.
-///
-/// ```
-/// # use sonr::reactor::producers::ReactiveGenerator;
-/// # use sonr::prelude::*;
-/// # use sonr::errors::Result;
-/// # fn main() -> Result<()> {
-/// let handle = System::init()?;
-/// let numbers = ReactiveGenerator::new(vec![1, 2, 3])?
-///     .map(|number: usize| {
-///         // This closure is never called unless noop is called.
-///         eprintln!("{:?}", number * 2);
-///         handle.send(SystemEvent::Stop);
-///     });
-///
-/// // `numbers` has no receiving reactor for
-/// // the output, hence the closure in `map` is never invoked.
-/// // However by adding a `noop()` call, numbers now has a recipient for the
-/// // output and the closure in map will be invoked
-/// let run = numbers.noop();
-///
-/// System::start(run);
-/// # Ok(())
-/// # }
-/// ```
-pub struct Noop<T> {
-    _p: PhantomData<T>,
-}
-
-impl<T> Noop<T> {
-    pub fn new() -> Self {
-        Self { _p: PhantomData }
-    }
-}
-
-impl<T> Reactor for Noop<T> {
-    type Output = ();
-    type Input = T;
-
-    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
-        Reaction::Continue
-    }
-
-    // fn reacting(&mut self, event: Event) -> bool {
-    //     false
-    // }
-}
+// // -----------------------------------------------------------------------------
+// // 		- Noop -
+// // -----------------------------------------------------------------------------
+// /// Useful as the final reactor in a chain.
+// /// Given a chain with two reactors the last reactor will never
+// /// have `react` invoked as there is no receiving reactor to accept
+// /// the output. Most cases this is not a problem unless the final
+// /// reactor is using `.map`.
+// ///
+// /// This also makes it possible to run a single reactor.
+// ///
+// /// ```
+// /// # use sonr::reactor::producers::ReactiveGenerator;
+// /// # use sonr::prelude::*;
+// /// # use sonr::errors::Result;
+// /// # fn main() -> Result<()> {
+// /// let handle = System::init()?;
+// /// let numbers = ReactiveGenerator::new(vec![1, 2, 3])?
+// ///     .map(|number: usize| {
+// ///         handle.send(SystemEvent::Stop);
+// ///     });
+// ///
+// /// // `numbers` has no receiving reactor for
+// /// // the output, hence the closure in `map` is never invoked.
+// /// // However by adding a `noop()` call, numbers now has a recipient for the
+// /// // output and the closure in map will be invoked
+// /// let run = numbers.noop();
+// ///
+// /// System::start(run);
+// /// # Ok(())
+// /// # }
+// /// ```
+// pub struct Noop<T> {
+//     _p: PhantomData<T>,
+// }
+// 
+// impl<T> Noop<T> {
+//     pub fn new() -> Self {
+//         Self { _p: PhantomData }
+//     }
+// }
+// 
+// impl<T> Reactor for Noop<T> {
+//     type Output = ();
+//     type Input = T;
+// 
+//     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+//         Reaction::Continue
+//     }
+// 
+//     // fn reacting(&mut self, event: Event) -> bool {
+//     //     false
+//     // }
+// }
 
 // -----------------------------------------------------------------------------
 // 		- Map -
