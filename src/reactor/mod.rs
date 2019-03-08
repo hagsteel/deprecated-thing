@@ -8,7 +8,7 @@ use crate::errors::Result;
 pub mod combinators;
 pub mod producers;
 
-use combinators::{And, Chain, Map, Noop};
+use combinators::{And, Chain, Map};
 
 pub enum Reaction<T> {
     Continue,
@@ -58,15 +58,6 @@ pub trait Reactor: Sized {
     /// The output of the first reactor is the input of the second reactor.
     fn chain<T: Reactor>(self, to: T) -> Chain<Self, T> {
         Chain::new(self, to)
-    }
-
-    // TODO: might be redundant
-    /// Create a chain with a [`Noop`] as the second
-    /// in the chain.
-    ///
-    /// [`Noop`]: combinators/struct.Noop.html
-    fn noop(self) -> Chain<Self, Noop<Self::Output>> {
-        Chain::new(self, Noop::new())
     }
 
     /// Run two reactors independent of each other.
