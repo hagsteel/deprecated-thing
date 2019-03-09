@@ -203,7 +203,7 @@ impl<T: Send + 'static> Reactor for ReactiveSignalReceiver<T> {
     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
         if let Reaction::Event(event) = reaction {
             if self.inner.token() == event.token() {
-                while let Ok(val) = self.try_recv() {
+                if let Ok(val) = self.try_recv() {
                     return Reaction::Value(val)
                 }
             } else {

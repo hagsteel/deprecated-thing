@@ -71,8 +71,12 @@ impl<T> Reactor for ReactiveGenerator<T> {
 }
 
 /// Mono <-- TODO incomplete
-pub struct Mono<T> {
-    value: Reaction<T>
+pub struct Mono<T>(Reaction<T>);
+
+impl<T> Mono<T> {
+    pub fn new(val: T) -> Self {
+        Self(Reaction::Value(val))
+    }
 }
 
 impl<T> Reactor for Mono<T> {
@@ -81,7 +85,7 @@ impl<T> Reactor for Mono<T> {
 
     fn react(&mut self, reaction: Reaction<()>) -> Reaction<Self::Output> {
         let mut output = Reaction::Continue;
-        mem::swap(&mut self.value, &mut output);
+        mem::swap(&mut self.0, &mut output);
 
         // let _ = self.set_ready.set_readiness(Ready::readable());
         output

@@ -1,7 +1,7 @@
 use std::fmt::{self, Formatter, Debug};
 use std::io::{self, Read, Write};
 
-use mio::{Event, Ready, Token, Evented};
+use mio::{Ready, Token, Evented};
 
 use crate::reactor::Reactor;
 use crate::reactor::{Reaction, EventedReactor};
@@ -24,7 +24,9 @@ impl<T> Debug for Stream<T>
     where T: Debug + Evented + Read + Write,
 {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "({:?})", self)
+        f.debug_struct("Stream")
+            .field("inner", &self.inner)
+            .finish()
     }
 }
 
@@ -65,16 +67,6 @@ impl<T: Read + Write + Evented> Reactor for Stream<T> {
     type Output = ();
     type Input = ();
 
-    // fn reacting(&mut self, event: Event) -> bool {
-    //     if event.token() == self.inner.token() {
-    //         self.inner.is_readable |= event.readiness().is_readable();
-    //         self.inner.is_writable |= event.readiness().is_writable();
-    //         true
-    //     } else {
-    //         false
-    //     }
-    // }
-
     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
         if let Reaction::Event(event) = reaction {
             if event.token() != self.inner.token() {
@@ -83,10 +75,11 @@ impl<T: Read + Write + Evented> Reactor for Stream<T> {
 
             self.inner.is_readable |= event.readiness().is_readable();
             self.inner.is_writable |= event.readiness().is_writable();
-            return Reaction::Value(());
-        }
 
-        reaction
+            Reaction::Value(())
+        } else { 
+            reaction
+        }
     }
 }
 

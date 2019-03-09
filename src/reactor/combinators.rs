@@ -29,13 +29,13 @@ where
     type Input = F::Input;
     type Output = T::Output;
 
-    fn react(&mut self, mut reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
         let mut r1 = self.from.react(reaction);
         loop {
             match r1 {
                 Reaction::Event(_) => break self.to.react(r1),
                 Reaction::Value(val) => {
-                    let r2 = self.to.react(Reaction::Value(val));
+                    let _ = self.to.react(Reaction::Value(val));
                     r1 = self.from.react(Reaction::Continue);
                 }
                 Reaction::Continue => {

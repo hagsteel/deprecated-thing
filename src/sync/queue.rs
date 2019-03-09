@@ -42,7 +42,6 @@ impl<T: Send + 'static> Reactor for ReactiveQueue<T> {
     type Output = ();
     type Input = T;
 
-    //fn react_to(&mut self, value: Self::Input) {
     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
         if let Reaction::Value(value) = reaction {
             self.push(value);
@@ -51,10 +50,6 @@ impl<T: Send + 'static> Reactor for ReactiveQueue<T> {
             Reaction::Continue
         }
     }
-
-    // fn react(&mut self) -> Reaction<Self::Output> {
-    //     Reaction::Value(())
-    // }
 }
 
 
