@@ -16,14 +16,9 @@ pub enum Reaction<T> {
     Value(T),
 }
 
-// TODO: remove this
-impl<T> Reaction<T> {
-    fn print(&self) {
-        match self {
-            Reaction::Continue => eprintln!("{:?}", "NO REACTION"),
-            Reaction::Value(_) => eprintln!("{:?}", "VALUE"),
-            Reaction::Event(_) => eprintln!("{:?}", "EVENT"),
-        }
+impl<T> From<Event> for Reaction<T> {
+    fn from(event: Event) -> Reaction<T> {
+        Reaction::Event(event)
     }
 }
 
