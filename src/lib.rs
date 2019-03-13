@@ -26,4 +26,5 @@ pub mod prelude {
     pub use mio::{Token, Event};
     pub use crate::reactor::{Reaction, Reactor};
     pub use crate::system::{SystemEvent, System};
+    pub use crate::net::stream::Stream;
 }

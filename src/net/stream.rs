@@ -1,17 +1,16 @@
-use std::fmt::{self, Formatter, Debug};
+use std::fmt::{self, Debug, Formatter};
 use std::io::{self, Read, Write};
 
-use mio::{Ready, Token, Evented};
+use mio::{Evented, Ready, Token};
 
-use crate::reactor::Reactor;
-use crate::reactor::{Reaction, EventedReactor};
 use crate::errors::Result;
-
+use crate::reactor::Reactor;
+use crate::reactor::{EventedReactor, Reaction};
 
 // -----------------------------------------------------------------------------
 // 		- Stream -
-// ----------------------------------------------------------------------------- 
-/// When a [`Stream`] `react`s the inner evented reactor 
+// -----------------------------------------------------------------------------
+/// When a [`Stream`] `react`s the inner evented reactor
 /// is marked as either readable and / or writable.
 ///
 /// TODO: document this
@@ -22,16 +21,24 @@ pub struct Stream<T: Read + Write + Evented> {
     inner: EventedReactor<T>,
 }
 
-impl<T> Stream<T> 
-    where T: Debug + Evented + Read + Write,
+impl<T: Evented + Write + Read> AsRef<Stream<T>> for Stream<T> {
+    fn as_ref(&self) -> &Stream<T> {
+        &self
+    }
+}
+
+impl<T> Stream<T>
+where
+    T: Debug + Evented + Read + Write,
 {
     pub fn into_inner(self) -> EventedReactor<T> {
         self.inner
     }
-} 
+}
 
-impl<T> Debug for Stream<T> 
-    where T: Debug + Evented + Read + Write,
+impl<T> Debug for Stream<T>
+where
+    T: Debug + Evented + Read + Write,
 {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         f.debug_struct("Stream")
@@ -49,7 +56,7 @@ impl<T: Read + Write + Evented> From<EventedReactor<T>> for Stream<T> {
 impl<T: Read + Write + Evented> Stream<T> {
     pub fn new(inner: T) -> Result<Self> {
         let inner = EventedReactor::new(inner, Ready::readable() | Ready::writable())?;
-        Ok(Self { inner, })
+        Ok(Self { inner })
     }
 
     /// The token used to track readiness of the underlying stream
@@ -92,7 +99,7 @@ impl<T: Read + Write + Evented> Reactor for Stream<T> {
             self.inner.is_writable |= event.readiness().is_writable();
 
             Reaction::Value(())
-        } else { 
+        } else {
             reaction
         }
     }
@@ -112,4 +119,4 @@ impl<T: Read + Write + Evented> Write for Stream<T> {
     fn flush(&mut self) -> io::Result<()> {
         self.inner.flush()
     }
-} 
+}
