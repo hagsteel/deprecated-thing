@@ -104,7 +104,7 @@ impl<T> Reactor for Mono<T> {
 ///
 /// let run = numbers.chain(consumer.map(|num| {
 ///     handle.send(SystemEvent::Stop);
-/// }).noop());
+/// }));
 ///
 /// System::start(run);
 /// # Ok(())

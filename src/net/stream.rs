@@ -7,6 +7,7 @@ use crate::reactor::Reactor;
 use crate::reactor::{Reaction, EventedReactor};
 use crate::errors::Result;
 
+
 // -----------------------------------------------------------------------------
 // 		- Stream -
 // ----------------------------------------------------------------------------- 
@@ -21,6 +22,14 @@ pub struct Stream<T: Read + Write + Evented> {
     inner: EventedReactor<T>,
 }
 
+impl<T> Stream<T> 
+    where T: Debug + Evented + Read + Write,
+{
+    pub fn into_inner(self) -> EventedReactor<T> {
+        self.inner
+    }
+} 
+
 impl<T> Debug for Stream<T> 
     where T: Debug + Evented + Read + Write,
 {
@@ -31,10 +40,15 @@ impl<T> Debug for Stream<T>
     }
 }
 
+impl<T: Read + Write + Evented> From<EventedReactor<T>> for Stream<T> {
+    fn from(reactor: EventedReactor<T>) -> Self {
+        Self { inner: reactor }
+    }
+}
+
 impl<T: Read + Write + Evented> Stream<T> {
     pub fn new(inner: T) -> Result<Self> {
         let inner = EventedReactor::new(inner, Ready::readable() | Ready::writable())?;
-
         Ok(Self { inner, })
     }
 
