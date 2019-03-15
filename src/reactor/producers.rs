@@ -70,12 +70,39 @@ impl<T> Reactor for ReactiveGenerator<T> {
     }
 }
 
-/// Mono <-- TODO incomplete
-pub struct Mono<T>(Reaction<T>);
+/// A [`Mono`] reacts as soon as the [`System`] starts and produces exactly one value
+/// (the value set by the constructor).
+/// ```
+/// # use sonr::system::{System, SystemEvent};
+/// # use sonr::reactor::Reactor;
+/// # use sonr::reactor::producers::Mono;
+/// fn main() {
+///     let handle = System::init().unwrap();
+///     let gen = Mono::new(0u8).unwrap();
+///
+///     System::start(gen.map(|i| {
+///         assert_eq!(i, 0u8);
+///         handle.send(SystemEvent::Stop) 
+///     }));
+/// }
+/// ```
+///
+/// [`Mono`]: struct.Mono.html
+/// [`System`]: ../../system/struct.System.html
+pub struct Mono<T> {
+    inner: Reaction<T>,
+    reactor: EventedReactor<Registration>,
+}
 
 impl<T> Mono<T> {
-    pub fn new(val: T) -> Self {
-        Self(Reaction::Value(val))
+    pub fn new(val: T) -> Result<Self> {
+        let (reg, set_ready) = Registration::new2();
+        let reactor = EventedReactor::new(reg, Ready::readable())?;
+        set_ready.set_readiness(Ready::readable())?;
+        Ok(Self { 
+            inner: Reaction::Value(val),
+            reactor,
+        })
     }
 }
 
@@ -84,11 +111,21 @@ impl<T> Reactor for Mono<T> {
     type Output = T;
 
     fn react(&mut self, reaction: Reaction<()>) -> Reaction<Self::Output> {
-        let mut output = Reaction::Continue;
-        mem::swap(&mut self.0, &mut output);
+        if let Reaction::Event(ev) = reaction {
+            if ev.token() != self.reactor.token() {
+                return ev.into()
+            }
 
-        // let _ = self.set_ready.set_readiness(Ready::readable());
-        output
+            let mut output = Reaction::Continue;
+            mem::swap(&mut self.inner, &mut output);
+            return output;
+        }
+
+        match reaction {
+            Reaction::Continue => Reaction::Continue,
+            Reaction::Event(ev) => Reaction::Event(ev),
+            Reaction::Value(_) => Reaction::Continue,
+        }
     }
 }
 
