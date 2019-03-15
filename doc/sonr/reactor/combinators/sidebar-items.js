@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["And",""],["Callback",""],["Chain",""],["Map",""]]});
+initSidebarItems({"struct":[["And",""],["Chain",""],["Map",""]]});

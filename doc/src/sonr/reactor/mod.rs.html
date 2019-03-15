@@ -211,61 +211,83 @@
 <span id="211">211</span>
 <span id="212">212</span>
 <span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Formatter</span>, <span class="ident">Debug</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="self">self</span>, <span class="ident">Read</span>, <span class="ident">Write</span>, <span class="ident">ErrorKind</span>::<span class="ident">WouldBlock</span>};
-<span class="kw">use</span> <span class="ident">mio</span>::{<span class="ident">Evented</span>, <span class="ident">Event</span>, <span class="ident">Token</span>, <span class="ident">Ready</span>};
+<span class="kw">use</span> <span class="ident">mio</span>::{<span class="ident">Event</span>, <span class="ident">Evented</span>, <span class="ident">Ready</span>, <span class="ident">Token</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>, <span class="ident">Formatter</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="self">self</span>, <span class="ident">ErrorKind</span>::<span class="ident">WouldBlock</span>, <span class="ident">Read</span>, <span class="ident">Write</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="prelude-ty">Result</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">system</span>::<span class="ident">System</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="prelude-ty">Result</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">combinators</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">producers</span>;
 
-<span class="kw">use</span> <span class="ident">combinators</span>::{<span class="ident">Chain</span>, <span class="ident">And</span>, <span class="ident">Callback</span>, <span class="ident">Map</span>};
+<span class="kw">use</span> <span class="ident">combinators</span>::{<span class="ident">And</span>, <span class="ident">Chain</span>, <span class="ident">Map</span>};
 
-<span class="comment">// -----------------------------------------------------------------------------</span>
-<span class="comment">// 		- Something that reacts -</span>
-<span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">NoReaction</span>,
+    <span class="ident">Continue</span>,
+    <span class="ident">Event</span>(<span class="ident">Event</span>),
     <span class="ident">Value</span>(<span class="ident">T</span>),
 }
 
-<span class="doccomment">/// A reactor ...</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Reactive</span> : <span class="ident">Sized</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">event</span>: <span class="ident">Event</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">event</span>)
+    }
+}
 
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Debug</span><span class="op">&gt;</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span> {
+            <span class="ident">Reaction</span>::<span class="ident">Continue</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Reaction::Continue&quot;</span>),
+            <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">event</span>) <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Reaction::Event({:?})&quot;</span>, <span class="ident">event</span>),
+            <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>) <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Reaction::Value({:?})&quot;</span>, <span class="ident">val</span>),
+        }
+    }
+}
+
+<span class="doccomment">/// A reactor ...</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Reactor</span>: <span class="ident">Sized</span> {
     <span class="doccomment">/// The output passed to the next reactor in the chain.</span>
     <span class="kw">type</span> <span class="ident">Output</span>;
 
     <span class="doccomment">/// Expected input type from the previous reactor in the chain.</span>
     <span class="kw">type</span> <span class="ident">Input</span>;
 
-    <span class="doccomment">/// If `reacting` returns `true`, `react` is called and pushes the program</span>
-    <span class="doccomment">/// forward.</span>
-    <span class="kw">fn</span> <span class="ident">reacting</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_event</span>: <span class="ident">Event</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
-
     <span class="doccomment">/// The generated output is passed as the input to the</span>
     <span class="doccomment">/// next reactor in the chain.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// `react` is called repeatedly until the reaction returns </span>
-    <span class="doccomment">/// `Reaction::NoReaction`</span>
-    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
-        <span class="ident">Reaction</span>::<span class="ident">NoReaction</span>
+    <span class="doccomment">/// `react` is called repeatedly until the reaction returns</span>
+    <span class="doccomment">/// `Reaction::Continue`</span>
+    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">reaction</span>: <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
+        <span class="ident">Reaction</span>::<span class="ident">Continue</span>
     }
-
-    <span class="doccomment">/// React to the input of another reactor.</span>
-    <span class="kw">fn</span> <span class="ident">react_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_input</span>: <span class="self">Self</span>::<span class="ident">Input</span>) {}
 
     <span class="doccomment">/// Chain two reactors together.</span>
     <span class="doccomment">/// The output of the first reactor is the input of the second reactor.</span>
-    <span class="kw">fn</span> <span class="ident">chain</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Reactive</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">to</span>: <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">Chain</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">chain</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Reactor</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">to</span>: <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">Chain</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="ident">Chain</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">to</span>)
     }
 
     <span class="doccomment">/// Run two reactors independent of each other.</span>
     <span class="doccomment">/// ```no_run</span>
-    <span class="doccomment">/// # use sonr::reactor::Reactive;</span>
+    <span class="doccomment">/// # use sonr::reactor::Reactor;</span>
     <span class="doccomment">/// # use sonr::errors::Result;</span>
     <span class="doccomment">/// use sonr::system::System;</span>
     <span class="doccomment">/// use sonr::net::tcp::ReactiveTcpListener;</span>
@@ -279,7 +301,7 @@
     <span class="doccomment">/// #   Ok(())</span>
     <span class="doccomment">/// }</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">fn</span> <span class="ident">and</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Reactive</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">second</span>: <span class="ident">C</span>) <span class="op">-&gt;</span> <span class="ident">And</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">C</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">and</span><span class="op">&lt;</span><span class="ident">C</span>: <span class="ident">Reactor</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">second</span>: <span class="ident">C</span>) <span class="op">-&gt;</span> <span class="ident">And</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">C</span><span class="op">&gt;</span> {
         <span class="ident">And</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">second</span>)
     }
 
@@ -297,22 +319,16 @@
     <span class="doccomment">/// let listener = tcp::ReactiveTcpListener::bind(&quot;127.0.0.1:5000&quot;)?;</span>
     <span class="doccomment">/// let queue = ReactiveQueue::unbounded();</span>
     <span class="doccomment">/// let server = listener.map(|(stream, addr)| {</span>
-    <span class="doccomment">///     eprintln!(&quot;address is: {:?}&quot;, addr);</span>
     <span class="doccomment">///     stream</span>
     <span class="doccomment">/// }).chain(queue);</span>
     <span class="doccomment">/// System::start(server);</span>
     <span class="doccomment">/// # Ok(())</span>
     <span class="doccomment">/// # }</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">fn</span> <span class="ident">and_then</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">callback</span>: <span class="ident">F</span>) <span class="op">-&gt;</span> <span class="ident">Callback</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">F</span><span class="op">&gt;</span> {
-        <span class="ident">Callback</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">callback</span>)
-    }
-
     <span class="kw">fn</span> <span class="ident">map</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">callback</span>: <span class="ident">F</span>) <span class="op">-&gt;</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="ident">Map</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">callback</span>)
     }
 }
-
 
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="comment">// 		- An evented Reactor -</span>
@@ -327,11 +343,18 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">is_writable</span>: <span class="ident">bool</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">EventedReactor</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> 
-    <span class="kw">where</span> <span class="ident">E</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Evented</span>,
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">EventedReactor</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">E</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Evented</span>,
 {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;({:?})&quot;</span>, <span class="self">self</span>)
+        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;EventedReactor&quot;</span>)
+            .<span class="ident">field</span>(<span class="string">&quot;inner&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>)
+            .<span class="ident">field</span>(<span class="string">&quot;token&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">token</span>)
+            .<span class="ident">field</span>(<span class="string">&quot;interest&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">interest</span>)
+            .<span class="ident">field</span>(<span class="string">&quot;is_readable&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">is_readable</span>)
+            .<span class="ident">field</span>(<span class="string">&quot;is_writable&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">is_writable</span>)
+            .<span class="ident">finish</span>()
     }
 }
 
@@ -370,7 +393,6 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">interest</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Ready</span> {
         <span class="self">self</span>.<span class="ident">interest</span>
     }
-
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Evented</span> <span class="op">+</span> <span class="ident">Read</span><span class="op">&gt;</span> <span class="ident">Read</span> <span class="kw">for</span> <span class="ident">EventedReactor</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
@@ -383,7 +405,12 @@
                 <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">System</span>::<span class="ident">reregister</span>(<span class="kw-2">&amp;</span><span class="self">self</span>);
                 <span class="kw">match</span> <span class="ident">res</span> {
                     <span class="prelude-val">Ok</span>(()) <span class="op">=&gt;</span> (),
-                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">Other</span>, <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;failed to reregister evented: {:?}&quot;</span>, <span class="ident">e</span>))),
+                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">new</span>(
+                            <span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">Other</span>,
+                            <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;failed to reregister evented: {:?}&quot;</span>, <span class="ident">e</span>),
+                        ));
+                    }
                 }
             }
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">is_readable</span> <span class="op">=</span> <span class="bool-val">false</span>,
@@ -405,7 +432,12 @@
                 <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">System</span>::<span class="ident">reregister</span>(<span class="kw-2">&amp;</span><span class="self">self</span>);
                 <span class="kw">match</span> <span class="ident">res</span> {
                     <span class="prelude-val">Ok</span>(()) <span class="op">=&gt;</span> (),
-                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">Other</span>, <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;failed to reregister evented: {:?}&quot;</span>, <span class="ident">e</span>))),
+                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">new</span>(
+                            <span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">Other</span>,
+                            <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;failed to reregister evented: {:?}&quot;</span>, <span class="ident">e</span>),
+                        ));
+                    }
                 }
             }
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">is_writable</span> <span class="op">=</span> <span class="bool-val">false</span>,
@@ -424,6 +456,6 @@
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="ident">System</span>::<span class="ident">free_token</span>(<span class="self">self</span>.<span class="ident">token</span>());
     }
-} 
+}
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../../../";window.currentCrate = "sonr";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>

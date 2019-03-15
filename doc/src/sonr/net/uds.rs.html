@@ -58,13 +58,32 @@
 <span id="58">58</span>
 <span id="59">59</span>
 <span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">WouldBlock</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">unix</span>::<span class="ident">net</span>::<span class="ident">SocketAddr</span>;
 
-<span class="kw">use</span> <span class="ident">mio</span>::{<span class="ident">Event</span>, <span class="ident">Ready</span>, <span class="ident">Token</span>};
+<span class="kw">use</span> <span class="ident">mio</span>::{<span class="ident">Ready</span>, <span class="ident">Token</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">reactor</span>::<span class="ident">Reactive</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">reactor</span>::<span class="ident">Reactor</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">reactor</span>::{<span class="ident">Reaction</span>, <span class="ident">EventedReactor</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">system</span>::<span class="ident">System</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="prelude-ty">Result</span>;
@@ -95,26 +114,45 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Reactive</span> <span class="kw">for</span> <span class="ident">ReactiveUdsListener</span> {
+<span class="kw">impl</span> <span class="ident">Reactor</span> <span class="kw">for</span> <span class="ident">ReactiveUdsListener</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> (<span class="ident">UnixStream</span>, <span class="ident">SocketAddr</span>);
     <span class="kw">type</span> <span class="ident">Input</span> <span class="op">=</span> ();
 
-    <span class="kw">fn</span> <span class="ident">reacting</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">Event</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> { <span class="comment">//Reaction&lt;Self::Output&gt; {</span>
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">token</span>() <span class="op">==</span> <span class="ident">event</span>.<span class="ident">token</span>()
-    }
-
-    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">inner</span>().<span class="ident">accept</span>();
-        <span class="kw">match</span> <span class="ident">res</span> {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">val</span>)) <span class="op">=&gt;</span> <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>),
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=&gt;</span> { }
-            <span class="prelude-val">Err</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">kind</span>() <span class="op">==</span> <span class="ident">WouldBlock</span> <span class="op">=&gt;</span> {
-                <span class="ident">System</span>::<span class="ident">reregister</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>).<span class="ident">unwrap</span>();
+    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">reaction</span>: <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">event</span>) <span class="op">=</span> <span class="ident">reaction</span> {
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">token</span>() <span class="op">==</span> <span class="ident">event</span>.<span class="ident">token</span>() {
+                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">inner</span>().<span class="ident">accept</span>();
+                <span class="kw">match</span> <span class="ident">res</span> {
+                    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">val</span>)) <span class="op">=&gt;</span> <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>),
+                    <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=&gt;</span> <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>,
+                    <span class="prelude-val">Err</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">kind</span>() <span class="op">==</span> <span class="ident">WouldBlock</span> <span class="op">=&gt;</span> {
+                        <span class="ident">System</span>::<span class="ident">reregister</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>).<span class="ident">unwrap</span>();
+                        <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>
+                    }
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>,
+                }
             }
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> (),
         }
-        <span class="ident">Reaction</span>::<span class="ident">NoReaction</span>
-    }
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span> <span class="op">=</span> <span class="ident">reaction</span> {
+                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">inner</span>().<span class="ident">accept</span>();
+                <span class="kw">match</span> <span class="ident">res</span> {
+                    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">val</span>)) <span class="op">=&gt;</span> <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>),
+                    <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=&gt;</span> <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>,
+                    <span class="prelude-val">Err</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">kind</span>() <span class="op">==</span> <span class="ident">WouldBlock</span> <span class="op">=&gt;</span> {
+                        <span class="ident">System</span>::<span class="ident">reregister</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>).<span class="ident">unwrap</span>();
+                        <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>
+                    }
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>,
+                }
+        }
+
+        <span class="kw">match</span> <span class="ident">reaction</span> {
+            <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">e</span>),
+            <span class="ident">Reaction</span>::<span class="ident">Continue</span> <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>,
+            <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>,
+        } 
+    } 
 }
 
 

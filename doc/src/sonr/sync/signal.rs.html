@@ -207,22 +207,39 @@
 <span id="207">207</span>
 <span id="208">208</span>
 <span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>};
 
 <span class="kw">use</span> <span class="ident">crossbeam</span>::<span class="ident">channel</span>::{<span class="ident">Sender</span>, <span class="ident">Receiver</span>, <span class="ident">TrySendError</span>};
 <span class="kw">use</span> <span class="ident">crossbeam</span>::<span class="ident">channel</span>::{<span class="ident">unbounded</span> <span class="kw">as</span> <span class="ident">channel</span>, <span class="ident">bounded</span>};
-<span class="kw">use</span> <span class="ident">mio</span>::{<span class="ident">Poll</span>, <span class="ident">PollOpt</span>, <span class="ident">Registration</span>, <span class="ident">SetReadiness</span>, <span class="ident">Ready</span>, <span class="ident">Evented</span>, <span class="ident">Token</span>, <span class="ident">Event</span>};
+<span class="kw">use</span> <span class="ident">mio</span>::{<span class="ident">Poll</span>, <span class="ident">PollOpt</span>, <span class="ident">Registration</span>, <span class="ident">SetReadiness</span>, <span class="ident">Ready</span>, <span class="ident">Evented</span>, <span class="ident">Token</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">reactor</span>::{<span class="ident">Reactive</span>, <span class="ident">Reaction</span>, <span class="ident">EventedReactor</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">reactor</span>::{<span class="ident">Reactor</span>, <span class="ident">Reaction</span>, <span class="ident">EventedReactor</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Capacity</span>;
 
 
 <span class="comment">// -----------------------------------------------------------------------------</span>
-<span class="comment">// 		- Signal sender -</span>
+<span class="comment">//              - Signal sender -</span>
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SignalSender</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="ident">sender</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
@@ -233,12 +250,12 @@
     <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">sender</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">set_readiness</span>: <span class="ident">SetReadiness</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">sender</span>,
-            <span class="ident">set_readiness</span>, 
+            <span class="ident">set_readiness</span>,
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">TrySendError</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;&gt;</span>{
-        <span class="self">self</span>.<span class="ident">set_readiness</span>.<span class="ident">set_readiness</span>(<span class="ident">Ready</span>::<span class="ident">readable</span>());
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">set_readiness</span>.<span class="ident">set_readiness</span>(<span class="ident">Ready</span>::<span class="ident">readable</span>());
         <span class="self">self</span>.<span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">val</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -249,7 +266,7 @@
         <span class="ident">SignalSender</span>::<span class="ident">new</span>(
             <span class="self">self</span>.<span class="ident">sender</span>.<span class="ident">clone</span>(),
             <span class="self">self</span>.<span class="ident">set_readiness</span>.<span class="ident">clone</span>(),
-        )
+            )
     }
 }
 
@@ -261,7 +278,7 @@
 
 
 <span class="comment">// -----------------------------------------------------------------------------</span>
-<span class="comment">// 		- Signal receiver -</span>
+<span class="comment">//              - Signal receiver -</span>
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SignalReceiver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="ident">receiver</span>: <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
@@ -302,7 +319,7 @@
 
     <span class="kw">fn</span> <span class="ident">with_sender_receiver</span>(<span class="ident">sender</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">receiver</span>: <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> (<span class="ident">registration</span>, <span class="ident">set_readiness</span>) <span class="op">=</span> <span class="ident">Registration</span>::<span class="ident">new2</span>();
-        <span class="self">Self</span> { 
+        <span class="self">Self</span> {
             <span class="ident">receiver</span>,
             <span class="ident">registration</span>,
 
@@ -329,7 +346,7 @@
 
 
 <span class="comment">// -----------------------------------------------------------------------------</span>
-<span class="comment">// 		- Reactive signal receiver -</span>
+<span class="comment">//              - Reactive signal receiver -</span>
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="doccomment">/// React when new data is ready to be received</span>
 <span class="doccomment">///</span>
@@ -338,15 +355,15 @@
 <span class="doccomment">/// # use sonr::prelude::*;</span>
 <span class="doccomment">/// # use sonr::sync::signal::{SignalReceiver, ReactiveSignalReceiver, SignalSender};</span>
 <span class="doccomment">/// # use sonr::sync::Capacity;</span>
-<span class="doccomment">/// </span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// # fn main() {</span>
 <span class="doccomment">/// let rx: SignalReceiver&lt;u8&gt; = SignalReceiver::unbounded();</span>
 <span class="doccomment">/// let tx = rx.sender();</span>
-<span class="doccomment">/// </span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// let handle = thread::spawn(move || {</span>
 <span class="doccomment">///     let handle = System::init().unwrap();</span>
 <span class="doccomment">///     let rx = ReactiveSignalReceiver::new(rx).unwrap();</span>
-<span class="doccomment">///     </span>
+<span class="doccomment">///</span>
 <span class="doccomment">///     let run = rx.map(|val| {</span>
 <span class="doccomment">///         // Received value, signaling System</span>
 <span class="doccomment">///         // to stop</span>
@@ -355,9 +372,9 @@
 <span class="doccomment">///</span>
 <span class="doccomment">///     System::start(run);</span>
 <span class="doccomment">/// });</span>
-<span class="doccomment">/// </span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// tx.send(123);</span>
-<span class="doccomment">/// </span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// handle.join();</span>
 <span class="doccomment">/// # }</span>
 <span class="doccomment">/// ```</span>
@@ -366,7 +383,7 @@
     <span class="ident">inner</span>: <span class="ident">EventedReactor</span><span class="op">&lt;</span><span class="ident">SignalReceiver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">ReactiveSignalReceiver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> { 
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">ReactiveSignalReceiver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">inner</span>: <span class="ident">SignalReceiver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">errors</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">inner</span>: <span class="ident">EventedReactor</span>::<span class="ident">new</span>(<span class="ident">inner</span>, <span class="ident">Ready</span>::<span class="ident">readable</span>())<span class="question-mark">?</span>,
@@ -400,20 +417,37 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span> <span class="ident">Reactive</span> <span class="kw">for</span> <span class="ident">ReactiveSignalReceiver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span> <span class="ident">Reactor</span> <span class="kw">for</span> <span class="ident">ReactiveSignalReceiver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>;
     <span class="kw">type</span> <span class="ident">Input</span> <span class="op">=</span> ();
 
-    <span class="kw">fn</span> <span class="ident">reacting</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">Event</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">token</span>() <span class="op">==</span> <span class="ident">event</span>.<span class="ident">token</span>()
-    } 
+    <span class="comment">// fn reacting(&amp;mut self, event: Event) -&gt; bool {</span>
+    <span class="comment">//     self.inner.token() == event.token()</span>
+    <span class="comment">// }</span>
 
-    <span class="kw">fn</span> <span class="ident">react_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="self">Self</span>::<span class="ident">Input</span>) { }
+    <span class="comment">// fn react_to(&amp;mut self, _: Self::Input) { }</span>
 
-    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">try_recv</span>() {
-            <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>), 
-            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">NoReaction</span>
+    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">reaction</span>: <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">event</span>) <span class="op">=</span> <span class="ident">reaction</span> {
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">token</span>() <span class="op">==</span> <span class="ident">event</span>.<span class="ident">token</span>() {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">try_recv</span>() {
+                    <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>)
+                }
+            } <span class="kw">else</span> {
+                <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">event</span>);
+            }
+        }
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span> <span class="op">=</span> <span class="ident">reaction</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">try_recv</span>() {
+                <span class="kw">return</span> <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>);
+            }
+        }
+
+        <span class="kw">match</span> <span class="ident">reaction</span> {
+            <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">e</span>),
+            <span class="ident">Reaction</span>::<span class="ident">Continue</span> <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>,
+            <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>,
         }
     }
 }

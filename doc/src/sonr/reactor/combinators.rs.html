@@ -191,168 +191,166 @@
 <span id="191">191</span>
 <span id="192">192</span>
 <span id="193">193</span>
-<span id="194">194</span>
-<span id="195">195</span>
-<span id="196">196</span>
-<span id="197">197</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
 
-<span class="kw">use</span> <span class="ident">mio</span>::<span class="ident">Event</span>;
-
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Reactive</span>, <span class="ident">Reaction</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Reaction</span>, <span class="ident">Reactor</span>};
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Chain</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Reactive</span>,
-        <span class="ident">T</span>: <span class="ident">Reactive</span>,
+<span class="kw">where</span>
+    <span class="ident">F</span>: <span class="ident">Reactor</span>,
+    <span class="ident">T</span>: <span class="ident">Reactor</span>,
 {
     <span class="ident">from</span>: <span class="ident">F</span>,
     <span class="ident">to</span>: <span class="ident">T</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Chain</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> 
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Reactive</span>,
-        <span class="ident">T</span>: <span class="ident">Reactive</span>,
-{ 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">from</span>: <span class="ident">F</span>, <span class="ident">to</span>: <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> { 
-            <span class="ident">from</span>,
-            <span class="ident">to</span>,
-        }
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Reactive</span> <span class="kw">for</span> <span class="ident">Chain</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> 
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Reactive</span>,
-        <span class="ident">T</span>: <span class="ident">Reactive</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">=</span><span class="ident">F</span>::<span class="ident">Output</span><span class="op">&gt;</span>,
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Chain</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">F</span>: <span class="ident">Reactor</span>,
+    <span class="ident">T</span>: <span class="ident">Reactor</span>,
 {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Output</span>;
-    <span class="kw">type</span> <span class="ident">Input</span> <span class="op">=</span> <span class="ident">F</span>::<span class="ident">Input</span>;
-
-    <span class="kw">fn</span> <span class="ident">reacting</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">Event</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">from</span>.<span class="ident">reacting</span>(<span class="ident">event</span>) {
-            <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">from</span>.<span class="ident">react</span>() {
-                <span class="self">self</span>.<span class="ident">to</span>.<span class="ident">react_to</span>(<span class="ident">val</span>);
-            }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">to</span>.<span class="ident">reacting</span>(<span class="ident">event</span>) {
-            <span class="comment">// This can not output anything</span>
-            <span class="comment">// as it has no recipient, however</span>
-            <span class="comment">// it&#39;s important that it reacts, or the </span>
-            <span class="comment">// last link in the chain won&#39;t ever execute</span>
-            <span class="comment">// any code within it&#39;s `react` function.</span>
-            <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">from</span>.<span class="ident">react</span>() { }
-        }
-        <span class="bool-val">false</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">from</span>: <span class="ident">F</span>, <span class="ident">to</span>: <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">from</span>, <span class="ident">to</span> }
     }
-
-    <span class="kw">fn</span> <span class="ident">react_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">input</span>: <span class="self">Self</span>::<span class="ident">Input</span>) {
-        <span class="self">self</span>.<span class="ident">from</span>.<span class="ident">react_to</span>(<span class="ident">input</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">to</span>.<span class="ident">react</span>()
-    }
-
 }
 
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Reactor</span> <span class="kw">for</span> <span class="ident">Chain</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">F</span>: <span class="ident">Reactor</span>,
+    <span class="ident">T</span>: <span class="ident">Reactor</span><span class="op">&lt;</span><span class="ident">Input</span> <span class="op">=</span> <span class="ident">F</span>::<span class="ident">Output</span><span class="op">&gt;</span>,
+{
+    <span class="kw">type</span> <span class="ident">Input</span> <span class="op">=</span> <span class="ident">F</span>::<span class="ident">Input</span>;
+    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">Output</span>;
+
+    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">reaction</span>: <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">from</span>.<span class="ident">react</span>(<span class="ident">reaction</span>);
+        <span class="kw">loop</span> {
+            <span class="kw">match</span> <span class="ident">r1</span> {
+                <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="kw">break</span> <span class="self">self</span>.<span class="ident">to</span>.<span class="ident">react</span>(<span class="ident">r1</span>),
+                <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>) <span class="op">=&gt;</span> {
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">to</span>.<span class="ident">react</span>(<span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>));
+                    <span class="ident">r1</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">from</span>.<span class="ident">react</span>(<span class="ident">Reaction</span>::<span class="ident">Continue</span>);
+                }
+                <span class="ident">Reaction</span>::<span class="ident">Continue</span> <span class="op">=&gt;</span> {
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">to</span>.<span class="ident">react</span>(<span class="ident">Reaction</span>::<span class="ident">Continue</span>) {
+                        <span class="kw">break</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>;
+                    }
+                }
+            }
+        }
+    }
+}
 
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="comment">// 		- And two reactors -</span>
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">And</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Reactive</span>,
-        <span class="ident">U</span>: <span class="ident">Reactive</span>,
+<span class="kw">where</span>
+    <span class="ident">T</span>: <span class="ident">Reactor</span>,
+    <span class="ident">U</span>: <span class="ident">Reactor</span>,
 {
     <span class="ident">first</span>: <span class="ident">T</span>,
     <span class="ident">second</span>: <span class="ident">U</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> <span class="ident">And</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> 
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Reactive</span>,
-        <span class="ident">U</span>: <span class="ident">Reactive</span>,
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> <span class="ident">And</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">T</span>: <span class="ident">Reactor</span>,
+    <span class="ident">U</span>: <span class="ident">Reactor</span>,
 {
-
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">first</span>: <span class="ident">T</span>, <span class="ident">second</span>: <span class="ident">U</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> { 
-            <span class="ident">first</span>,
-            <span class="ident">second</span>,
-        }
+        <span class="self">Self</span> { <span class="ident">first</span>, <span class="ident">second</span> }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> <span class="ident">Reactive</span> <span class="kw">for</span> <span class="ident">And</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> 
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Reactive</span>,
-        <span class="ident">U</span>: <span class="ident">Reactive</span>,
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> <span class="ident">Reactor</span> <span class="kw">for</span> <span class="ident">And</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">T</span>: <span class="ident">Reactor</span>,
+    <span class="ident">U</span>: <span class="ident">Reactor</span>,
 {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> ();
     <span class="kw">type</span> <span class="ident">Input</span> <span class="op">=</span> ();
 
-    <span class="kw">fn</span> <span class="ident">reacting</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">Event</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">first</span>.<span class="ident">reacting</span>(<span class="ident">event</span>);
-        <span class="self">self</span>.<span class="ident">second</span>.<span class="ident">reacting</span>(<span class="ident">event</span>);
-        <span class="bool-val">false</span>
-    }
+    <span class="comment">// fn reacting(&amp;mut self, event: Event) -&gt; bool {</span>
+    <span class="comment">//     self.first.reacting(event);</span>
+    <span class="comment">//     self.second.reacting(event);</span>
+    <span class="comment">//     false</span>
+    <span class="comment">// }</span>
 
-    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
-        <span class="ident">Reaction</span>::<span class="ident">Value</span>(())
-    }
-
-    <span class="kw">fn</span> <span class="ident">react_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_input</span>: <span class="self">Self</span>::<span class="ident">Input</span>) {
-        <span class="macro">unreachable</span><span class="macro">!</span>();
-    }
-}
-
-
-<span class="comment">// -----------------------------------------------------------------------------</span>
-<span class="comment">// 		- Callback -</span>
-<span class="comment">// -----------------------------------------------------------------------------</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Callback</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="ident">source</span>: <span class="ident">S</span>,
-    <span class="ident">callback</span>: <span class="ident">F</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span><span class="op">&gt;</span> <span class="ident">Callback</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">source</span>: <span class="ident">S</span>, <span class="ident">callback</span>: <span class="ident">F</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> { 
-            <span class="ident">source</span>,
-            <span class="ident">callback</span>,
+    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">reaction</span>: <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="ident">reaction</span> {
+            <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">event</span>) <span class="op">=&gt;</span> {
+                <span class="self">self</span>.<span class="ident">first</span>.<span class="ident">react</span>(<span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">event</span>));
+                <span class="self">self</span>.<span class="ident">second</span>.<span class="ident">react</span>(<span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">event</span>));
+                <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">event</span>)
+            }
+            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>,
         }
     }
+
+    <span class="comment">// fn react_to(&amp;mut self, _input: Self::Input) {</span>
+    <span class="comment">//     unreachable!();</span>
+    <span class="comment">// }</span>
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span><span class="op">&gt;</span> <span class="ident">Reactive</span> <span class="kw">for</span> <span class="ident">Callback</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span><span class="op">&gt;</span> 
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">Reactive</span>,
-        <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="ident">S</span>::<span class="ident">Output</span>) <span class="op">-&gt;</span> <span class="ident">S</span>::<span class="ident">Output</span>,
-{
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Output</span>;
-    <span class="kw">type</span> <span class="ident">Input</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Input</span>;
-
-    <span class="kw">fn</span> <span class="ident">reacting</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">Event</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">source</span>.<span class="ident">reacting</span>(<span class="ident">event</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">react_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">input</span>: <span class="self">Self</span>::<span class="ident">Input</span>) {
-        <span class="self">self</span>.<span class="ident">source</span>.<span class="ident">react_to</span>(<span class="ident">input</span>);
-    }
-
-    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">source</span>.<span class="ident">react</span>() {
-            <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>) <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Value</span>((<span class="self">self</span>.<span class="ident">callback</span>)(<span class="ident">val</span>)),
-            <span class="ident">Reaction</span>::<span class="ident">NoReaction</span> <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">NoReaction</span>
-        }
-    }
-}
-
+<span class="comment">// // -----------------------------------------------------------------------------</span>
+<span class="comment">// // 		- Noop -</span>
+<span class="comment">// // -----------------------------------------------------------------------------</span>
+<span class="comment">// /// Useful as the final reactor in a chain.</span>
+<span class="comment">// /// Given a chain with two reactors the last reactor will never</span>
+<span class="comment">// /// have `react` invoked as there is no receiving reactor to accept</span>
+<span class="comment">// /// the output. Most cases this is not a problem unless the final</span>
+<span class="comment">// /// reactor is using `.map`.</span>
+<span class="comment">// ///</span>
+<span class="comment">// /// This also makes it possible to run a single reactor.</span>
+<span class="comment">// ///</span>
+<span class="comment">// /// ```</span>
+<span class="comment">// /// # use sonr::reactor::producers::ReactiveGenerator;</span>
+<span class="comment">// /// # use sonr::prelude::*;</span>
+<span class="comment">// /// # use sonr::errors::Result;</span>
+<span class="comment">// /// # fn main() -&gt; Result&lt;()&gt; {</span>
+<span class="comment">// /// let handle = System::init()?;</span>
+<span class="comment">// /// let numbers = ReactiveGenerator::new(vec![1, 2, 3])?</span>
+<span class="comment">// ///     .map(|number: usize| {</span>
+<span class="comment">// ///         handle.send(SystemEvent::Stop);</span>
+<span class="comment">// ///     });</span>
+<span class="comment">// ///</span>
+<span class="comment">// /// // `numbers` has no receiving reactor for</span>
+<span class="comment">// /// // the output, hence the closure in `map` is never invoked.</span>
+<span class="comment">// /// // However by adding a `noop()` call, numbers now has a recipient for the</span>
+<span class="comment">// /// // output and the closure in map will be invoked</span>
+<span class="comment">// /// let run = numbers.noop();</span>
+<span class="comment">// ///</span>
+<span class="comment">// /// System::start(run);</span>
+<span class="comment">// /// # Ok(())</span>
+<span class="comment">// /// # }</span>
+<span class="comment">// /// ```</span>
+<span class="comment">// pub struct Noop&lt;T&gt; {</span>
+<span class="comment">//     _p: PhantomData&lt;T&gt;,</span>
+<span class="comment">// }</span>
+<span class="comment">// </span>
+<span class="comment">// impl&lt;T&gt; Noop&lt;T&gt; {</span>
+<span class="comment">//     pub fn new() -&gt; Self {</span>
+<span class="comment">//         Self { _p: PhantomData }</span>
+<span class="comment">//     }</span>
+<span class="comment">// }</span>
+<span class="comment">// </span>
+<span class="comment">// impl&lt;T&gt; Reactor for Noop&lt;T&gt; {</span>
+<span class="comment">//     type Output = ();</span>
+<span class="comment">//     type Input = T;</span>
+<span class="comment">// </span>
+<span class="comment">//     fn react(&amp;mut self, reaction: Reaction&lt;Self::Input&gt;) -&gt; Reaction&lt;Self::Output&gt; {</span>
+<span class="comment">//         Reaction::Continue</span>
+<span class="comment">//     }</span>
+<span class="comment">// </span>
+<span class="comment">//     // fn reacting(&amp;mut self, event: Event) -&gt; bool {</span>
+<span class="comment">//     //     false</span>
+<span class="comment">//     // }</span>
+<span class="comment">// }</span>
 
 <span class="comment">// -----------------------------------------------------------------------------</span>
-<span class="comment">// 		- Callback -</span>
+<span class="comment">// 		- Map -</span>
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> {
     <span class="ident">source</span>: <span class="ident">S</span>,
@@ -362,7 +360,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">source</span>: <span class="ident">S</span>, <span class="ident">callback</span>: <span class="ident">F</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> { 
+        <span class="self">Self</span> {
             <span class="ident">source</span>,
             <span class="ident">callback</span>,
             <span class="ident">_p</span>: <span class="ident">PhantomData</span>,
@@ -370,26 +368,20 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Reactive</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> 
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">Reactive</span>,
-        <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="ident">S</span>::<span class="ident">Output</span>) <span class="op">-&gt;</span> <span class="ident">T</span>,
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Reactor</span> <span class="kw">for</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">S</span>: <span class="ident">Reactor</span>,
+    <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="ident">S</span>::<span class="ident">Output</span>) <span class="op">-&gt;</span> <span class="ident">T</span>,
 {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>;
     <span class="kw">type</span> <span class="ident">Input</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Input</span>;
 
-    <span class="kw">fn</span> <span class="ident">reacting</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">Event</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">source</span>.<span class="ident">reacting</span>(<span class="ident">event</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">react_to</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">input</span>: <span class="self">Self</span>::<span class="ident">Input</span>) {
-        <span class="self">self</span>.<span class="ident">source</span>.<span class="ident">react_to</span>(<span class="ident">input</span>);
-    }
-
-    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">source</span>.<span class="ident">react</span>() {
+    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">reaction</span>: <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">reaction</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">source</span>.<span class="ident">react</span>(<span class="ident">reaction</span>);
+        <span class="kw">match</span> <span class="ident">reaction</span> {
             <span class="ident">Reaction</span>::<span class="ident">Value</span>(<span class="ident">val</span>) <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Value</span>((<span class="self">self</span>.<span class="ident">callback</span>)(<span class="ident">val</span>)),
-            <span class="ident">Reaction</span>::<span class="ident">NoReaction</span> <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">NoReaction</span>
+            <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">event</span>) <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Event</span>(<span class="ident">event</span>),
+            <span class="ident">Reaction</span>::<span class="ident">Continue</span> <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>,
         }
     }
 }
