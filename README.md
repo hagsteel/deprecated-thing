@@ -11,7 +11,7 @@ low barrier to entry.
 
 It is built on top of Mio.
 
-*  [API docs (missing)](https://hagsteel.github.io/sonr/)
+*  [API docs (incomplete)](https://hagsteel.github.io/sonr/)
 *  [Examples](https://github.com/hagsteel/sonr/tree/master/examples)
 
 ## Setup
