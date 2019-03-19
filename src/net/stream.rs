@@ -7,6 +7,13 @@ use crate::errors::Result;
 use crate::reactor::Reactor;
 use crate::reactor::{EventedReactor, Reaction};
 
+pub trait StreamRef {
+    type Evented: Evented + Read + Write;
+
+    fn stream_ref(&self) -> &Stream<Self::Evented>;
+    fn stream_mut(&self) -> &mut Stream<Self::Evented>;
+}
+
 // -----------------------------------------------------------------------------
 // 		- Stream -
 // -----------------------------------------------------------------------------
