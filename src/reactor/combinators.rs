@@ -78,12 +78,6 @@ where
     type Output = ();
     type Input = ();
 
-    // fn reacting(&mut self, event: Event) -> bool {
-    //     self.first.reacting(event);
-    //     self.second.reacting(event);
-    //     false
-    // }
-
     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
         match reaction {
             Reaction::Event(event) => {
@@ -94,10 +88,6 @@ where
             _ => Reaction::Continue,
         }
     }
-
-    // fn react_to(&mut self, _input: Self::Input) {
-    //     unreachable!();
-    // }
 }
 
 // // -----------------------------------------------------------------------------
