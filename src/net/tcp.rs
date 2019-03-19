@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use mio::{Ready, Token};
 
 use crate::errors::Result;
-use crate::net::stream::Stream;
+use crate::net::stream::{Stream, StreamRef};
 use crate::reactor::Reactor;
 use crate::reactor::{EventedReactor, Reaction};
 use crate::system::System;
@@ -85,3 +85,15 @@ impl Reactor for ReactiveTcpListener {
 }
 
 pub type ReactiveTcpStream = Stream<mio::net::TcpStream>;
+
+impl StreamRef for ReactiveTcpStream {
+    type Evented = mio::net::TcpStream;
+    
+    fn stream_ref(&self) -> &Self {
+        self
+    }
+
+    fn stream_mut(&mut self) -> &mut Self {
+        self
+    }
+}

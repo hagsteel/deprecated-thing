@@ -7,7 +7,7 @@ use crate::reactor::Reactor;
 use crate::reactor::{Reaction, EventedReactor};
 use crate::system::System;
 use crate::errors::Result;
-use crate::net::stream::Stream;
+use crate::net::stream::{Stream, StreamRef};
 
 // Re-exports
 pub use mio_uds::{UnixListener, UnixStream};
@@ -77,3 +77,15 @@ impl Reactor for ReactiveUdsListener {
 
 
 pub type ReactiveUdsStream = Stream<UnixStream>;
+
+impl StreamRef for ReactiveUdsStream {
+    type Evented = UnixStream;
+    
+    fn stream_ref(&self) -> &Self {
+        self
+    }
+
+    fn stream_mut(&mut self) -> &mut Self {
+        self
+    }
+}

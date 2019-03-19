@@ -11,7 +11,7 @@ pub trait StreamRef {
     type Evented: Evented + Read + Write;
 
     fn stream_ref(&self) -> &Stream<Self::Evented>;
-    fn stream_mut(&self) -> &mut Stream<Self::Evented>;
+    fn stream_mut(&mut self) -> &mut Stream<Self::Evented>;
 }
 
 // -----------------------------------------------------------------------------
