@@ -5,9 +5,7 @@
 
 Simple Opinionated Networking in Rust
 
-The goal of Sonr is to provide a light weight networking library that makes it
-easy to get started writing network applications in Rust, and have a reasonably
-low barrier to entry.
+The goal of Sonr is to provide a light weight networking library to get started writing network applications in Rust.
 
 It is built on top of Mio.
 
