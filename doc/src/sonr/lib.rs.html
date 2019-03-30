@@ -28,16 +28,32 @@
 <span id="28">28</span>
 <span id="29">29</span>
 <span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Simple Opinionated Networking in Rust</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Sonr builds on the idea of chaining reactors together to form the flow of the application.</span>
 <span class="doccomment">//!</span>
+<span class="doccomment">//! The two main components of Sonr are the [`Reactor`] and the [`System`].</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! ```text</span>
-<span class="doccomment">//! TcpListener -&gt; Authentication -&gt; Chat</span>
-<span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
+<span class="doccomment">//! A [`Reactor`] is anything that reacts to the output of another reactor or a mio::[`Event`], and has</span>
+<span class="doccomment">//! an input and an output. This makes it possible (and intended) to chain two</span>
+<span class="doccomment">//! reactors. Such a chain is in it self a [`Reactor`], and can be chained further.</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! The [`System`] runs the reactors and handles the registration and re-registration</span>
+<span class="doccomment">//! of reactors (using `mio::Poll::register`).</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! [`Reactor`]: reactor/trait.Reactor.html</span>
+<span class="doccomment">//! [`System`]: system/struct.System.html</span>
+<span class="doccomment">//! [`Event`]: struct.Event.html</span>
 <span class="comment">//#[deny(missing_docs)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">reactor</span>;
 

@@ -159,6 +159,23 @@
 <span id="159">159</span>
 <span id="160">160</span>
 <span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
 
@@ -174,15 +191,27 @@
     <span class="kw">static</span> <span class="ident">CURRENT_SYSTEM</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">System</span><span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="ident">RefCell</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>);
 }
 
-<span class="doccomment">/// Specific event the `System` responds to</span>
-<span class="doccomment">/// NOTE: There should only be one `System::init` call per thread</span>
+<span class="doccomment">/// Specific event the [`System`] responds to</span>
+<span class="doccomment">/// NOTE: There should only be one [`System::init`] call per thread</span>
 <span class="doccomment">/// The System handles registration and pushes `Event`s to the reactors</span>
-<span class="doccomment">/// passed to `System::start`.</span>
+<span class="doccomment">/// passed to [`System::start`].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`System`]: struct.System.html</span>
+<span class="doccomment">/// [`System::start`]: struct.System.html#method.start</span>
+<span class="doccomment">/// [`System::init`]: struct.System.html#method.init</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SystemEvent</span> {
     <span class="ident">Stop</span>,
 }
 
+<span class="doccomment">/// `System` is thread local and has to exist for each thread using `Reactors` that react to</span>
+<span class="doccomment">/// [`Reaction::Event(event)`].</span>
+<span class="doccomment">///  There can only be **one** instance of a `System` per thread, and this instance is created by</span>
+<span class="doccomment">///  calling `System::init()`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`System::init()`]: struct.System.html#method.init</span>
+<span class="doccomment">/// [`Reaction::Event(event)`]: ../reactor/enum.Reaction.html</span>
+<span class="doccomment">/// [`System::start()`]: struct.System.html#method.start</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">System</span> {
     <span class="ident">reactors</span>: <span class="ident">PreVec</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
     <span class="ident">poll</span>: <span class="ident">Poll</span>,
@@ -305,10 +334,15 @@
         <span class="prelude-val">Ok</span>(())
     } 
 
+    <span class="doccomment">/// The token can be registered with another reactor.</span>
+    <span class="doccomment">/// This is called when an [`EventedReactor`] is dropped.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`EventedReactor`]: ../reactor/struct.EventedReactor.html</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">free_token</span>(<span class="ident">token</span>: <span class="ident">Token</span>) {
         <span class="macro">with_system</span><span class="macro">!</span>(<span class="ident">current</span>, { <span class="ident">current</span>.<span class="ident">reactors</span>.<span class="ident">remove</span>(<span class="ident">token</span>.<span class="number">0</span>); });
     }
 
+    <span class="doccomment">/// Reserve a token</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reserve_token</span>() <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Token</span><span class="op">&gt;</span> {
         <span class="macro">with_system</span><span class="macro">!</span>(<span class="ident">current</span>, { 
             <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">current</span>.<span class="ident">reactors</span>.<span class="ident">insert</span>(())<span class="question-mark">?</span>;
