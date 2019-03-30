@@ -13,9 +13,6 @@ sonr = {git = "https://github.com/hagsteel/sonr" }
 
 Simple Opinionated Networking in Rust
 
-The goal of Sonr is to provide a light weight networking library to get started writing network applications in Rust.
-
-
 *  [API docs (incomplete)](https://hagsteel.github.io/sonr/)
 *  [Examples](https://github.com/hagsteel/sonr/tree/master/examples)
 
