@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["And",""],["Chain",""],["Map",""]]});
+initSidebarItems({"struct":[["And","Use `and` to run more than one (evented) reactor in parallel."],["Chain",""],["Map",""]]});
