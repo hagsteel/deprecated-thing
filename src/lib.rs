@@ -2,11 +2,19 @@
 //!
 //! Sonr builds on the idea of chaining reactors together to form the flow of the application.
 //!
+//! The two main components of Sonr are the [`Reactor`] and the [`System`].
 //!
-//! ```text
-//! TcpListener -> Authentication -> Chat
-//! ```
 //!
+//! A [`Reactor`] is anything that reacts to the output of another reactor or a mio::[`Event`], and has
+//! an input and an output. This makes it possible (and intended) to chain two
+//! reactors. Such a chain is in it self a [`Reactor`], and can be chained further.
+//! 
+//! The [`System`] runs the reactors and handles the registration and re-registration
+//! of reactors (using `mio::Poll::register`).
+//!
+//! [`Reactor`]: reactor/trait.Reactor.html
+//! [`System`]: system/struct.System.html
+//! [`Event`]: struct.Event.html
 //#[deny(missing_docs)]
 pub mod reactor;
 

@@ -12,15 +12,27 @@ thread_local! {
     static CURRENT_SYSTEM: RefCell<Option<System>> = RefCell::new(None);
 }
 
-/// Specific event the `System` responds to
-/// NOTE: There should only be one `System::init` call per thread
+/// Specific event the [`System`] responds to
+/// NOTE: There should only be one [`System::init`] call per thread
 /// The System handles registration and pushes `Event`s to the reactors
-/// passed to `System::start`.
+/// passed to [`System::start`].
+///
+/// [`System`]: struct.System.html
+/// [`System::start`]: struct.System.html#method.start
+/// [`System::init`]: struct.System.html#method.init
 #[derive(Debug)]
 pub enum SystemEvent {
     Stop,
 }
 
+/// `System` is thread local and has to exist for each thread using `Reactors` that react to
+/// [`Reaction::Event(event)`].
+///  There can only be **one** instance of a `System` per thread, and this instance is created by
+///  calling `System::init()`.
+///
+/// [`System::init()`]: struct.System.html#method.init
+/// [`Reaction::Event(event)`]: ../reactor/enum.Reaction.html
+/// [`System::start()`]: struct.System.html#method.start
 pub struct System {
     reactors: PreVec<()>,
     poll: Poll,
@@ -143,10 +155,15 @@ impl System {
         Ok(())
     } 
 
+    /// The token can be registered with another reactor.
+    /// This is called when an [`EventedReactor`] is dropped.
+    ///
+    /// [`EventedReactor`]: ../reactor/struct.EventedReactor.html
     pub fn free_token(token: Token) {
         with_system!(current, { current.reactors.remove(token.0); });
     }
 
+    /// Reserve a token
     pub fn reserve_token() -> Result<Token> {
         with_system!(current, { 
             let token = current.reactors.insert(())?;
