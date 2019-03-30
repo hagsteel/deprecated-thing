@@ -51,6 +51,30 @@ where
 // -----------------------------------------------------------------------------
 // 		- And two reactors -
 // -----------------------------------------------------------------------------
+/// Use `and` to run more than one (evented) reactor in parallel.
+/// 
+/// Since the output of a tcp listener is a stream and a socket address, it would
+/// not be possible to chain two tcp listeners together.
+/// It is also not possible to call `System::start` twice in the same thread.
+/// 
+/// To run two tcp listeners at the same time use `and`:
+/// 
+/// ```ignore
+/// use sonr::prelude::*;
+/// use sonr::net::tcp::ReactiveTcpListener;
+/// 
+/// fn main() {
+///     System::init();
+/// 
+///     let listener_1 = ReactiveTcpListener::bind("127.0.0.1:8000").unwrap();
+///     let listener_2 = ReactiveTcpListener::bind("127.0.0.1:9000").unwrap();
+/// 
+///     System::start(listener_1.and(listener_2));
+/// }
+/// ```
+/// 
+/// This means a `Reaction::Event(event)` from the `System` will be passed on to both
+/// listeners.
 pub struct And<T, U>
 where
     T: Reactor,
@@ -90,64 +114,12 @@ where
     }
 }
 
-// // -----------------------------------------------------------------------------
-// // 		- Noop -
-// // -----------------------------------------------------------------------------
-// /// Useful as the final reactor in a chain.
-// /// Given a chain with two reactors the last reactor will never
-// /// have `react` invoked as there is no receiving reactor to accept
-// /// the output. Most cases this is not a problem unless the final
-// /// reactor is using `.map`.
-// ///
-// /// This also makes it possible to run a single reactor.
-// ///
-// /// ```
-// /// # use sonr::reactor::producers::ReactiveGenerator;
-// /// # use sonr::prelude::*;
-// /// # use sonr::errors::Result;
-// /// # fn main() -> Result<()> {
-// /// let handle = System::init()?;
-// /// let numbers = ReactiveGenerator::new(vec![1, 2, 3])?
-// ///     .map(|number: usize| {
-// ///         handle.send(SystemEvent::Stop);
-// ///     });
-// ///
-// /// // `numbers` has no receiving reactor for
-// /// // the output, hence the closure in `map` is never invoked.
-// /// // However by adding a `noop()` call, numbers now has a recipient for the
-// /// // output and the closure in map will be invoked
-// /// let run = numbers.noop();
-// ///
-// /// System::start(run);
-// /// # Ok(())
-// /// # }
-// /// ```
-// pub struct Noop<T> {
-//     _p: PhantomData<T>,
-// }
-// 
-// impl<T> Noop<T> {
-//     pub fn new() -> Self {
-//         Self { _p: PhantomData }
-//     }
-// }
-// 
-// impl<T> Reactor for Noop<T> {
-//     type Output = ();
-//     type Input = T;
-// 
-//     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
-//         Reaction::Continue
-//     }
-// 
-//     // fn reacting(&mut self, event: Event) -> bool {
-//     //     false
-//     // }
-// }
-
 // -----------------------------------------------------------------------------
 // 		- Map -
 // -----------------------------------------------------------------------------
+///
+///
+///
 pub struct Map<S, F, T> {
     source: S,
     callback: F,
