@@ -176,7 +176,9 @@ impl<T> ReactiveSignalReceiver<T> {
         })
     }
 
-    fn try_recv(&self) -> errors::Result<T> {
+    /// Attempt to receive data.
+    /// Should be called after the receiver reacts to an event.
+    pub fn try_recv(&self) -> errors::Result<T> {
         Ok(self.inner.inner().try_recv()?)
     }
 
