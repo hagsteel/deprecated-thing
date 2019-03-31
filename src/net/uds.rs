@@ -15,11 +15,42 @@ pub use mio_uds::{UnixListener, UnixStream};
 // -----------------------------------------------------------------------------
 //              - Uds Listener -
 // -----------------------------------------------------------------------------
+/// Accept incoming connections and output `(UnixStream, SocketAddr)`;
+///
+///```
+/// # use std::time::Duration;
+/// # use std::net::SocketAddr;
+/// # use std::thread;
+/// # use std::fs::remove_file;
+/// # use sonr::prelude::*;
+/// # use sonr::errors::Result;
+/// use sonr::net::uds::{ReactiveUdsListener, UnixStream};
+///
+/// fn main() -> Result<()> {
+///     let system_signals = System::init()?;
+/// 
+///     # remove_file("/tmp/sonr-uds-test.sock");
+///     let listener = ReactiveUdsListener::bind("/tmp/sonr-uds-test.sock")?;
+///     let run = listener.map(|(strm, addr)| {
+///         eprintln!("connection from: {:?}", addr);
+///         strm
+///     }); 
+///     # thread::spawn(move || {
+///     #     thread::sleep(Duration::from_millis(100));
+///     #     UnixStream::connect("/tmp/sonr-uds-test.sock");
+///     #     system_signals.send(SystemEvent::Stop);
+///     # });
+/// 
+///     System::start(run)?;
+///     Ok(())
+/// }
+/// ```
 pub struct ReactiveUdsListener {
     inner: EventedReactor<UnixListener>,
 }
 
 impl ReactiveUdsListener {
+    /// Create a new Reactive UnixListener
     pub fn bind(path: impl AsRef<str>) -> Result<Self> {
         Ok(Self {
             inner: EventedReactor::new(
@@ -29,6 +60,7 @@ impl ReactiveUdsListener {
         })
     }
 
+    /// Get `Token` registered with the listener;
     pub fn token(&self) -> Token {
         self.inner.token()
     }

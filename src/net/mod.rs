@@ -1,3 +1,5 @@
+//! Network Reactors
+
 pub mod tcp; 
 pub mod stream;
 

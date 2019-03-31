@@ -1,7 +1,14 @@
+//! Combine [`Reactor`]s creating new [`Reactor`]s.
+//!
+//! See each individual combinator for more information.
 use std::marker::PhantomData;
 
 use super::{Reaction, Reactor};
 
+/// Chain two [`Reactor`]s together, making the output of the first
+/// reactor the input of the second.
+///
+/// [`Reactor`]: ../trait.Reactor.html
 pub struct Chain<F, T>
 where
     F: Reactor,
@@ -16,6 +23,9 @@ where
     F: Reactor,
     T: Reactor,
 {
+    /// Create a chain of two [`Reactors`].
+    ///
+    /// [`Reactor`]: ../trait.Reactor.html
     pub fn new(from: F, to: T) -> Self {
         Self { from, to }
     }
@@ -89,6 +99,7 @@ where
     T: Reactor,
     U: Reactor,
 {
+    /// Create a new `And` from two reactors.
     pub fn new(first: T, second: U) -> Self {
         Self { first, second }
     }
@@ -117,9 +128,38 @@ where
 // -----------------------------------------------------------------------------
 // 		- Map -
 // -----------------------------------------------------------------------------
+/// Map will capture the `Reaction::Value(val)` returned by `react` and apply 
+/// the provided closure on the value.  
 ///
+/// The returned value from the map is the new `Output` of the Reactor.
 ///
+///```
+/// # use std::time::Duration;
+/// # use std::net::SocketAddr;
+/// # use std::thread;
+/// # use std::net::TcpStream as StdStream;
+/// # use sonr::prelude::*;
+/// # use sonr::errors::Result;
+/// use sonr::net::tcp::{ReactiveTcpListener, TcpStream};
 ///
+/// fn main() -> Result<()> {
+///     let system_signals = System::init()?;
+/// 
+///     let listener = ReactiveTcpListener::bind("127.0.0.1:5555")?;
+///     let run = listener.map(|(strm, addr)| {
+///         // Return the tcp stream, ignoring the SocketAddr
+///         strm
+///     }); 
+///     # thread::spawn(move || {
+///     #     thread::sleep(Duration::from_millis(100));
+///     #     StdStream::connect("127.0.0.1:5555");
+///     #     system_signals.send(SystemEvent::Stop);
+///     # });
+/// 
+///     System::start(run)?;
+///     Ok(())
+/// }
+/// ```
 pub struct Map<S, F, T> {
     source: S,
     callback: F,
@@ -127,6 +167,7 @@ pub struct Map<S, F, T> {
 }
 
 impl<S, F, T> Map<S, F, T> {
+    /// Create a new map from a reactor and a closure.
     pub fn new(source: S, callback: F) -> Self {
         Self {
             source,

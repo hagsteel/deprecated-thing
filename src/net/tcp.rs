@@ -15,6 +15,35 @@ pub use mio::net::{TcpStream, TcpListener};
 // -----------------------------------------------------------------------------
 //              - Tcp Listener -
 // -----------------------------------------------------------------------------
+/// Accept incoming connections and output `(TcpStream, SocketAddr)`;
+///
+///```
+/// # use std::time::Duration;
+/// # use std::net::SocketAddr;
+/// # use std::thread;
+/// # use std::net::TcpStream as StdStream;
+/// # use sonr::prelude::*;
+/// # use sonr::errors::Result;
+/// use sonr::net::tcp::{ReactiveTcpListener, TcpStream};
+///
+/// fn main() -> Result<()> {
+///     let system_signals = System::init()?;
+/// 
+///     let listener = ReactiveTcpListener::bind("127.0.0.1:5555")?;
+///     let run = listener.map(|(strm, addr)| {
+///         eprintln!("connection from: {:?}", addr);
+///         strm
+///     }); 
+///     # thread::spawn(move || {
+///     #     thread::sleep(Duration::from_millis(100));
+///     #     StdStream::connect("127.0.0.1:5555");
+///     #     system_signals.send(SystemEvent::Stop);
+///     # });
+/// 
+///     System::start(run)?;
+///     Ok(())
+/// }
+/// ```
 pub struct ReactiveTcpListener {
     inner: EventedReactor<mio::net::TcpListener>,
 }
@@ -35,6 +64,7 @@ impl ReactiveTcpListener {
         })
     }
 
+    /// Get `Token` registered with the listener;
     pub fn token(&self) -> Token {
         self.inner.token()
     }
@@ -44,10 +74,6 @@ impl Reactor for ReactiveTcpListener {
     type Output = (mio::net::TcpStream, SocketAddr);
     type Input = ();
 
-    // fn reacting(&mut self, event: Event) -> bool {
-    //     self.inner.token() == event.token()
-    // }
-
     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
         if let Reaction::Event(event) = reaction {
             if self.inner.token() == event.token() {
@@ -55,7 +81,7 @@ impl Reactor for ReactiveTcpListener {
                 match res {
                     Ok(val) => return Reaction::Value(val),
                     Err(ref e) if e.kind() == WouldBlock => {
-                        System::reregister(&self.inner).unwrap();
+                        let _ = System::reregister(&self.inner);
                         return Reaction::Continue
                     }
                     Err(_) => return Reaction::Continue,
@@ -70,7 +96,7 @@ impl Reactor for ReactiveTcpListener {
             match res {
                 Ok(val) => return Reaction::Value(val),
                 Err(ref e) if e.kind() == WouldBlock => {
-                    System::reregister(&self.inner).unwrap();
+                    let _ = System::reregister(&self.inner);
                     return Reaction::Continue
                 }
                 Err(_) => return Reaction::Continue,

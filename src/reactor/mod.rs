@@ -10,9 +10,17 @@ pub mod producers;
 
 use combinators::{And, Chain, Map};
 
+/// Input / Output of a [`Reactor`].
+///
+/// [`Reactor`]: trait.Reactor.html
 pub enum Reaction<T> {
+    /// Continue
     Continue,
+
+    /// A Mio event.
     Event(Event),
+
+    /// Value
     Value(T),
 }
 
@@ -45,9 +53,7 @@ pub trait Reactor: Sized {
     ///
     /// `react` is called repeatedly until the reaction returns
     /// `Reaction::Continue`
-    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
-        Reaction::Continue
-    }
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output>;
 
     /// Chain two reactors together.
     /// The output of the first reactor is the input of the second reactor.

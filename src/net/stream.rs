@@ -20,9 +20,6 @@ pub trait StreamRef {
 /// When a [`Stream`] `react`s the inner evented reactor
 /// is marked as either readable and / or writable.
 ///
-/// TODO: document this
-/// NOTE: Add a sensible example
-///
 /// [`Stream`]: struct.Stream.html
 pub struct Stream<T: Read + Write + Evented> {
     inner: EventedReactor<T>,
