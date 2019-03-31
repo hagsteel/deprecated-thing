@@ -13,7 +13,7 @@ sonr = {git = "https://github.com/hagsteel/sonr" }
 
 Simple Opinionated Networking in Rust
 
-*  [API docs (incomplete)](https://hagsteel.github.io/sonr/)
+*  [API docs](https://hagsteel.github.io/sonr/)
 *  [Examples](https://github.com/hagsteel/sonr/tree/master/examples)
 
 ------
