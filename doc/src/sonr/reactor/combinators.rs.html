@@ -153,11 +153,59 @@
 <span id="153">153</span>
 <span id="154">154</span>
 <span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! Combine [`Reactor`]s creating new [`Reactor`]s.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! See each individual combinator for more information.</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Reaction</span>, <span class="ident">Reactor</span>};
 
+<span class="doccomment">/// Chain two [`Reactor`]s together, making the output of the first</span>
+<span class="doccomment">/// reactor the input of the second.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`Reactor`]: ../trait.Reactor.html</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Chain</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Reactor</span>,
@@ -172,6 +220,9 @@
     <span class="ident">F</span>: <span class="ident">Reactor</span>,
     <span class="ident">T</span>: <span class="ident">Reactor</span>,
 {
+    <span class="doccomment">/// Create a chain of two [`Reactors`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Reactor`]: ../trait.Reactor.html</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">from</span>: <span class="ident">F</span>, <span class="ident">to</span>: <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">from</span>, <span class="ident">to</span> }
     }
@@ -245,6 +296,7 @@
     <span class="ident">T</span>: <span class="ident">Reactor</span>,
     <span class="ident">U</span>: <span class="ident">Reactor</span>,
 {
+    <span class="doccomment">/// Create a new `And` from two reactors.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">first</span>: <span class="ident">T</span>, <span class="ident">second</span>: <span class="ident">U</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">first</span>, <span class="ident">second</span> }
     }
@@ -273,9 +325,38 @@
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="comment">// 		- Map -</span>
 <span class="comment">// -----------------------------------------------------------------------------</span>
+<span class="doccomment">/// Map will capture the `Reaction::Value(val)` returned by `react` and apply </span>
+<span class="doccomment">/// the provided closure on the value.  </span>
 <span class="doccomment">///</span>
+<span class="doccomment">/// The returned value from the map is the new `Output` of the Reactor.</span>
 <span class="doccomment">///</span>
+<span class="doccomment">///```</span>
+<span class="doccomment">/// # use std::time::Duration;</span>
+<span class="doccomment">/// # use std::net::SocketAddr;</span>
+<span class="doccomment">/// # use std::thread;</span>
+<span class="doccomment">/// # use std::net::TcpStream as StdStream;</span>
+<span class="doccomment">/// # use sonr::prelude::*;</span>
+<span class="doccomment">/// # use sonr::errors::Result;</span>
+<span class="doccomment">/// use sonr::net::tcp::{ReactiveTcpListener, TcpStream};</span>
 <span class="doccomment">///</span>
+<span class="doccomment">/// fn main() -&gt; Result&lt;()&gt; {</span>
+<span class="doccomment">///     let system_signals = System::init()?;</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">///     let listener = ReactiveTcpListener::bind(&quot;127.0.0.1:5555&quot;)?;</span>
+<span class="doccomment">///     let run = listener.map(|(strm, addr)| {</span>
+<span class="doccomment">///         // Return the tcp stream, ignoring the SocketAddr</span>
+<span class="doccomment">///         strm</span>
+<span class="doccomment">///     }); </span>
+<span class="doccomment">///     # thread::spawn(move || {</span>
+<span class="doccomment">///     #     thread::sleep(Duration::from_millis(100));</span>
+<span class="doccomment">///     #     StdStream::connect(&quot;127.0.0.1:5555&quot;);</span>
+<span class="doccomment">///     #     system_signals.send(SystemEvent::Stop);</span>
+<span class="doccomment">///     # });</span>
+<span class="doccomment">/// </span>
+<span class="doccomment">///     System::start(run)?;</span>
+<span class="doccomment">///     Ok(())</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> {
     <span class="ident">source</span>: <span class="ident">S</span>,
     <span class="ident">callback</span>: <span class="ident">F</span>,
@@ -283,6 +364,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Create a new map from a reactor and a closure.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">source</span>: <span class="ident">S</span>, <span class="ident">callback</span>: <span class="ident">F</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">source</span>,

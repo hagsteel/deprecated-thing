@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["And","Use `and` to run more than one (evented) reactor in parallel."],["Chain",""],["Map",""]]});
+initSidebarItems({"struct":[["And","Use `and` to run more than one (evented) reactor in parallel."],["Chain","Chain two [`Reactor`]s together, making the output of the first reactor the input of the second."],["Map","Map will capture the `Reaction::Value(val)` returned by `react` and apply   the provided closure on the value.  "]]});

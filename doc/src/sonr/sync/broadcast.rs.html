@@ -88,7 +88,17 @@
 <span id="88">88</span>
 <span id="89">89</span>
 <span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! Broadcast </span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">sync</span>::<span class="ident">signal</span>::{<span class="ident">SignalReceiver</span>, <span class="ident">SignalSender</span>};
@@ -100,6 +110,10 @@
 <span class="comment">//              - Broadcast -</span>
 <span class="comment">//              notify every subscriber, meaning T has to be Clone</span>
 <span class="comment">// -----------------------------------------------------------------------------</span>
+<span class="doccomment">/// Broadcast value to all subscribers.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This is useful in a pub/sub setup, however it requires that each value implements</span>
+<span class="doccomment">/// clone as the data is cloned.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Broadcast</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Clone</span><span class="op">&gt;</span> {
     <span class="ident">subscribers</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SignalSender</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;&gt;</span><span class="op">&gt;&gt;</span>,
     <span class="ident">capacity</span>: <span class="ident">Capacity</span>,
@@ -115,16 +129,17 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Clone</span><span class="op">&gt;</span> <span class="ident">Broadcast</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Create an unbounded broadcaster</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unbounded</span>() <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">Capacity</span>::<span class="ident">Unbounded</span>)
     }
 
+    <span class="doccomment">/// Create an bounded broadcaster</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bounded</span>(<span class="ident">capacity</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">Capacity</span>::<span class="ident">Bounded</span>(<span class="ident">capacity</span>))
     }
 
-    <span class="comment">// Register a signal trigger that will listen to </span>
-    <span class="comment">// broadcasts from this broadcaster</span>
+    <span class="doccomment">/// Create a new subscriber of the data</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">subscriber</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">SignalReceiver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">signal</span> <span class="op">=</span> <span class="ident">SignalReceiver</span>::<span class="ident">from</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">capacity</span>);
         <span class="kw">let</span> <span class="ident">trigger</span> <span class="op">=</span> <span class="ident">signal</span>.<span class="ident">sender</span>();
@@ -134,15 +149,17 @@
         <span class="ident">signal</span>
     }
 
+    <span class="doccomment">/// Publish data to all subscribers.</span>
+    <span class="doccomment">/// Note that the published data is cloned for each subscriber.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">publish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">T</span>) {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">subscribers</span>.<span class="ident">lock</span>() {
             <span class="prelude-val">Ok</span>(<span class="ident">subs</span>) <span class="op">=&gt;</span> {
                 <span class="kw">for</span> <span class="ident">sub</span> <span class="kw">in</span> <span class="ident">subs</span>.<span class="ident">iter</span>() {
                     <span class="kw">let</span> <span class="ident">val_c</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">clone</span>();
-                    <span class="ident">sub</span>.<span class="ident">send</span>(<span class="ident">val_c</span>);
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">sub</span>.<span class="ident">send</span>(<span class="ident">val_c</span>);
                 }
             }
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> { <span class="comment">/* Mutex error: ignored for now */</span> }
+            <span class="prelude-val">Err</span>(<span class="ident">_e</span>) <span class="op">=&gt;</span> { <span class="comment">/* Mutex error: ignored for now */</span> }
         }
 
     }
@@ -160,6 +177,7 @@
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="comment">// 		- Reactive broadcast -</span>
 <span class="comment">// -----------------------------------------------------------------------------</span>
+<span class="doccomment">/// A reactive broadcaster</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ReactiveBroadcast</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Clone</span><span class="op">&gt;</span> {
     <span class="ident">inner</span>: <span class="ident">Broadcast</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 }

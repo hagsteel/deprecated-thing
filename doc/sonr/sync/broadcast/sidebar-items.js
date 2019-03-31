@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Broadcast",""],["ReactiveBroadcast",""]]});
+initSidebarItems({"struct":[["Broadcast","Broadcast value to all subscribers."],["ReactiveBroadcast","A reactive broadcaster"]]});

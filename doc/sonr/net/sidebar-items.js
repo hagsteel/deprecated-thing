@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["stream",""],["tcp",""],["uds",""]]});
+initSidebarItems({"mod":[["stream","Stream"],["tcp","Reactive Tcp networking"],["uds","Unix Domain Sockets"]]});

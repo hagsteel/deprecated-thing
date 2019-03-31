@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ReactiveTcpListener",""],["TcpListener","A structure representing a socket server"],["TcpStream","A non-blocking TCP stream between a local socket and a remote socket."]],"type":[["ReactiveTcpStream",""]]});
+initSidebarItems({"struct":[["ReactiveTcpListener","Accept incoming connections and output `(TcpStream, SocketAddr)`;"],["TcpListener","A structure representing a socket server"],["TcpStream","A non-blocking TCP stream between a local socket and a remote socket."]],"type":[["ReactiveTcpStream","A reactive tcp stream."]]});

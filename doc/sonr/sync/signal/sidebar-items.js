@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ReactiveSignalReceiver","React when new data is ready to be received"],["SignalReceiver",""],["SignalSender",""]]});
+initSidebarItems({"struct":[["ReactiveSignalReceiver","React when new data is ready to be received"],["SignalReceiver","Evented receiver."],["SignalSender","Evented signal sender, used to send data between threads. A sender can not be created by it self, but has to exist as a result of a receiver. Thus a sender can only be created from a receiver."]]});

@@ -227,10 +227,162 @@
 <span id="227">227</span>
 <span id="228">228</span>
 <span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">mio</span>::{<span class="ident">Event</span>, <span class="ident">Evented</span>, <span class="ident">Ready</span>, <span class="ident">Token</span>};
+<span class="doccomment">//! Reactors are the heart of Sonr and work by pushing data down a chain of reactors.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!```no_run</span>
+<span class="doccomment">//! use std::io::Write;</span>
+<span class="doccomment">//! use std::thread;</span>
+<span class="doccomment">//! use sonr::prelude::*;</span>
+<span class="doccomment">//! use sonr::errors::Result;</span>
+<span class="doccomment">//! use sonr::sync::queue::{ReactiveQueue, ReactiveDeque};</span>
+<span class="doccomment">//! use sonr::net::tcp::{ReactiveTcpListener, TcpStream, ReactiveTcpStream};</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! // -----------------------------------------------------------------------------</span>
+<span class="doccomment">//! // 		- Writer -</span>
+<span class="doccomment">//! // 		Writer &quot;bye&quot; and drop the connection</span>
+<span class="doccomment">//! // -----------------------------------------------------------------------------</span>
+<span class="doccomment">//! struct Writer;</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! impl Reactor for Writer {</span>
+<span class="doccomment">//!     type Input = TcpStream;</span>
+<span class="doccomment">//!     type Output = ();</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//!     fn react(&amp;mut self, reaction: Reaction&lt;Self::Input&gt;) -&gt; Reaction&lt;Self::Output&gt; {</span>
+<span class="doccomment">//!         use Reaction::*;</span>
+<span class="doccomment">//!         match reaction {</span>
+<span class="doccomment">//!             Value(mut stream) =&gt; {</span>
+<span class="doccomment">//!                 stream.write(b&quot;bye\n&quot;);</span>
+<span class="doccomment">//!                 Continue</span>
+<span class="doccomment">//!             }</span>
+<span class="doccomment">//!             Event(ev) =&gt; Continue,</span>
+<span class="doccomment">//!             Continue =&gt; Continue,</span>
+<span class="doccomment">//!         }</span>
+<span class="doccomment">//!     }</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//! fn main() -&gt; Result&lt;()&gt; {</span>
+<span class="doccomment">//!     System::init()?;</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//!     // Listen for incoming connections</span>
+<span class="doccomment">//!     let listener = ReactiveTcpListener::bind(&quot;127.0.0.1:8000&quot;)?.map(|(s, _)| s);</span>
+<span class="doccomment">//!     // Connection queue for connections to be sent to another thread.</span>
+<span class="doccomment">//!     let mut queue = ReactiveQueue::unbounded();</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//!     for _ in 0..4 {</span>
+<span class="doccomment">//!         let deque = queue.deque();</span>
+<span class="doccomment">//!         thread::spawn(move || -&gt; Result&lt;()&gt; {</span>
+<span class="doccomment">//!             System::init()?;</span>
+<span class="doccomment">//!             let deque = ReactiveDeque::new(deque)?;</span>
+<span class="doccomment">//!             let writer = Writer;</span>
+<span class="doccomment">//!             let run = deque.chain(writer);</span>
+<span class="doccomment">//!             System::start(run)?;</span>
+<span class="doccomment">//!             Ok(())</span>
+<span class="doccomment">//!         });</span>
+<span class="doccomment">//!     }</span>
+<span class="doccomment">//! </span>
+<span class="doccomment">//!     let run = listener.chain(queue);</span>
+<span class="doccomment">//!     System::start(run)?;</span>
+<span class="doccomment">//!     Ok(())</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! </span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>, <span class="ident">Formatter</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="self">self</span>, <span class="ident">ErrorKind</span>::<span class="ident">WouldBlock</span>, <span class="ident">Read</span>, <span class="ident">Write</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
+<span class="kw">use</span> <span class="ident">mio</span>::{<span class="ident">Event</span>, <span class="ident">Evented</span>, <span class="ident">Ready</span>, <span class="ident">Token</span>};
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">system</span>::<span class="ident">System</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="prelude-ty">Result</span>;
@@ -240,9 +392,17 @@
 
 <span class="kw">use</span> <span class="ident">combinators</span>::{<span class="ident">And</span>, <span class="ident">Chain</span>, <span class="ident">Map</span>};
 
+<span class="doccomment">/// Input / Output of a [`Reactor`].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`Reactor`]: trait.Reactor.html</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Continue</span>
     <span class="ident">Continue</span>,
+
+    <span class="doccomment">/// A Mio event.</span>
     <span class="ident">Event</span>(<span class="ident">Event</span>),
+
+    <span class="doccomment">/// Value</span>
     <span class="ident">Value</span>(<span class="ident">T</span>),
 }
 
@@ -262,7 +422,12 @@
     }
 }
 
-<span class="doccomment">/// A reactor ...</span>
+<span class="doccomment">/// A reactor reacts to a [`Reaction`] and returns a [`Reaction`].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// With the `Output` type of one reactor being the same type as `Input` of another it&#39;s possible to chain these</span>
+<span class="doccomment">/// two reactors together.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`Reaction`]: enum.Reaction.html</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Reactor</span>: <span class="ident">Sized</span> {
     <span class="doccomment">/// The output passed to the next reactor in the chain.</span>
     <span class="kw">type</span> <span class="ident">Output</span>;
@@ -275,9 +440,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// `react` is called repeatedly until the reaction returns</span>
     <span class="doccomment">/// `Reaction::Continue`</span>
-    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">reaction</span>: <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
-        <span class="ident">Reaction</span>::<span class="ident">Continue</span>
-    }
+    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">reaction</span>: <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Chain two reactors together.</span>
     <span class="doccomment">/// The output of the first reactor is the input of the second reactor.</span>
@@ -333,14 +496,32 @@
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="comment">// 		- An evented Reactor -</span>
 <span class="comment">// -----------------------------------------------------------------------------</span>
-<span class="doccomment">/// The `EventedReactor` is driven by the `System`.</span>
-<span class="doccomment">/// TODO more documentation</span>
+<span class="doccomment">/// The `EventedReactor` is driven by the [`System`].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// An `EventedReactor` can not be sent between threads as it&#39;s bound to the </span>
+<span class="doccomment">/// System it was registered with.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// When an `EventedReactor` is created it&#39;s automatically registered with the [`System`],</span>
+<span class="doccomment">/// and when it dropps the [`Token`] registered with the `EventedReactor` is freed</span>
+<span class="doccomment">/// to be reused with another `EventedReactor`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The `EventedReactor` does not implement [`Reactor`] by it self,</span>
+<span class="doccomment">/// but rather acts as a building block when creating a Reactor that should</span>
+<span class="doccomment">/// also be evented.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The [`Stream`] is an example of this.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`Reactor`]: trait.Reactor.html</span>
+<span class="doccomment">/// [`Stream`]: ../net/stream/struct.Stream.html</span>
+<span class="doccomment">/// [`System`]: ../system/struct.System.html</span>
+<span class="doccomment">/// [`Token`]: ../struct.Token.html</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EventedReactor</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Evented</span><span class="op">&gt;</span> {
     <span class="ident">inner</span>: <span class="ident">E</span>,
     <span class="ident">token</span>: <span class="ident">Token</span>,
     <span class="ident">interest</span>: <span class="ident">Ready</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">is_readable</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">is_writable</span>: <span class="ident">bool</span>,
+    <span class="ident">_not_send</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> ()<span class="op">&gt;</span> <span class="comment">// Make the evented reactor !Send</span>
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">EventedReactor</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>
@@ -370,6 +551,7 @@
             <span class="ident">interest</span>,
             <span class="ident">is_readable</span>: <span class="bool-val">false</span>,
             <span class="ident">is_writable</span>: <span class="bool-val">false</span>,
+            <span class="ident">_not_send</span>: <span class="ident">PhantomData</span>,
         })
     }
 
