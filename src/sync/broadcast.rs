@@ -1,3 +1,4 @@
+//! Broadcast 
 use std::sync::{Arc, Mutex};
 
 use crate::sync::signal::{SignalReceiver, SignalSender};
@@ -9,6 +10,10 @@ use super::Capacity;
 //              - Broadcast -
 //              notify every subscriber, meaning T has to be Clone
 // -----------------------------------------------------------------------------
+/// Broadcast value to all subscribers.
+///
+/// This is useful in a pub/sub setup, however it requires that each value implements
+/// clone as the data is cloned.
 pub struct Broadcast<T: Clone> {
     subscribers: Arc<Mutex<Vec<SignalSender<T>>>>,
     capacity: Capacity,
@@ -24,16 +29,17 @@ impl<T: Clone> From<Capacity> for Broadcast<T> {
 }
 
 impl<T: Clone> Broadcast<T> {
+    /// Create an unbounded broadcaster
     pub fn unbounded() -> Self {
         Self::from(Capacity::Unbounded)
     }
 
+    /// Create an bounded broadcaster
     pub fn bounded(capacity: usize) -> Self {
         Self::from(Capacity::Bounded(capacity))
     }
 
-    // Register a signal trigger that will listen to 
-    // broadcasts from this broadcaster
+    /// Create a new subscriber of the data
     pub fn subscriber(&self) -> SignalReceiver<T> {
         let signal = SignalReceiver::from(&self.capacity);
         let trigger = signal.sender();
@@ -43,15 +49,17 @@ impl<T: Clone> Broadcast<T> {
         signal
     }
 
+    /// Publish data to all subscribers.
+    /// Note that the published data is cloned for each subscriber.
     pub fn publish(&self, val: T) {
         match self.subscribers.lock() {
             Ok(subs) => {
                 for sub in subs.iter() {
                     let val_c = val.clone();
-                    sub.send(val_c);
+                    let _ = sub.send(val_c);
                 }
             }
-            Err(e) => { /* Mutex error: ignored for now */ }
+            Err(_e) => { /* Mutex error: ignored for now */ }
         }
 
     }
@@ -69,6 +77,7 @@ impl<T: Clone> Clone for Broadcast<T> {
 // -----------------------------------------------------------------------------
 // 		- Reactive broadcast -
 // -----------------------------------------------------------------------------
+/// A reactive broadcaster
 pub struct ReactiveBroadcast<T: Clone> {
     inner: Broadcast<T>,
 }

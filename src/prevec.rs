@@ -290,22 +290,6 @@ impl<T> IndexMut<usize> for PreVec<T> {
     }
 }
 
-
-// -----------------------------------------------------------------------------
-// 		- Hackery dooda -
-// 		TODO: remove this
-// -----------------------------------------------------------------------------
-impl<T> PreVec<T> {
-    pub fn map<F: Fn(&T)>(&self, f: F) {
-        self.inner.iter().for_each(|e| {
-            match e {
-                Entry::Occupied(v) => f(v),
-                Entry::Empty(_) => ()
-            }
-        });
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

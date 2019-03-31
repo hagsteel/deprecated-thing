@@ -12,7 +12,7 @@
 //! The [`System`] runs the reactors and handles the registration and re-registration
 //! of reactors (using `mio::Poll::register`).
 //!
-//!```ignore
+//!```no_run
 //! use std::io::Write;
 //! use std::net::SocketAddr;
 //! use sonr::prelude::*;
@@ -58,14 +58,22 @@
 //! [`Reactor`]: reactor/trait.Reactor.html
 //! [`System`]: system/struct.System.html
 //! [`Event`]: struct.Event.html
-//#[deny(missing_docs)]
+#[deny(missing_docs)]
 pub mod reactor;
 
-//#[deny(missing_docs)]
+#[deny(missing_docs)]
 pub mod system;
+
+#[deny(missing_docs)]
 pub mod net;
+
+#[deny(missing_docs)]
 pub mod sync; 
+
+#[deny(missing_docs)]
 pub mod errors;
+
+#[deny(missing_docs)]
 mod prevec;
 
 pub use prevec::PreVec;

@@ -1,3 +1,5 @@
+//! Reactive Tcp networking
+
 use std::io::ErrorKind::WouldBlock;
 use std::net::SocketAddr;
 
@@ -49,12 +51,14 @@ pub struct ReactiveTcpListener {
 }
 
 impl ReactiveTcpListener {
+    /// Create a new listener from a mio::TcpListener
     pub fn new(listener: mio::net::TcpListener) -> Result<Self> {
         Ok(Self {
             inner: EventedReactor::new(listener, Ready::readable())?,
         })
     }
 
+    /// Create a new listener from an address
     pub fn bind(addr: &str) -> Result<Self> {
         Ok(Self {
             inner: EventedReactor::new(
@@ -110,6 +114,7 @@ impl Reactor for ReactiveTcpListener {
     } 
 }
 
+/// A reactive tcp stream.
 pub type ReactiveTcpStream = Stream<mio::net::TcpStream>;
 
 impl StreamRef for ReactiveTcpStream {

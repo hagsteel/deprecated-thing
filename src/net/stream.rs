@@ -1,3 +1,5 @@
+//! Stream
+
 use std::fmt::{self, Debug, Formatter};
 use std::io::{self, Read, Write};
 
@@ -7,10 +9,15 @@ use crate::errors::Result;
 use crate::reactor::Reactor;
 use crate::reactor::{EventedReactor, Reaction};
 
+/// Anything that has a stream
 pub trait StreamRef {
+    /// The Evented type for the Stream
     type Evented: Evented + Read + Write;
 
+    /// Immutable reference to the stream
     fn stream_ref(&self) -> &Stream<Self::Evented>;
+    
+    /// Mutable reference to the stream
     fn stream_mut(&mut self) -> &mut Stream<Self::Evented>;
 }
 
@@ -18,9 +25,12 @@ pub trait StreamRef {
 // 		- Stream -
 // -----------------------------------------------------------------------------
 /// When a [`Stream`] `react`s the inner evented reactor
-/// is marked as either readable and / or writable.
+/// is marked as either readable and / or writable depending on the [`Ready`] state of the
+/// [`Event`].
 ///
 /// [`Stream`]: struct.Stream.html
+/// [`Ready`]: ../../struct.Ready.html
+/// [`Event`]: ../../struct.Event.html
 pub struct Stream<T: Read + Write + Evented> {
     inner: EventedReactor<T>,
 }
@@ -35,6 +45,7 @@ impl<T> Stream<T>
 where
     T: Debug + Evented + Read + Write,
 {
+    /// Consume the stream and return the underlying evented reactor
     pub fn into_inner(self) -> EventedReactor<T> {
         self.inner
     }
@@ -58,6 +69,7 @@ impl<T: Read + Write + Evented> From<EventedReactor<T>> for Stream<T> {
 }
 
 impl<T: Read + Write + Evented> Stream<T> {
+    /// Create a new stream
     pub fn new(inner: T) -> Result<Self> {
         let inner = EventedReactor::new(inner, Ready::readable() | Ready::writable())?;
         Ok(Self { inner })

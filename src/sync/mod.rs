@@ -1,3 +1,4 @@
+//! Reactive queue, broadcaster and single mpsc
 pub mod queue;
 pub mod signal;
 pub mod broadcast;

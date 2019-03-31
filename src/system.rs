@@ -1,3 +1,22 @@
+//! The `System` handles polling events, registering evented reactors and token management.
+//!
+//! When [`init`] is called, the [`System`] is setup for the local thread.
+//!
+//! Once [`start`] is called with a reactor the system begins to poll [`Event`]s.
+//!
+//! When an [`Event`] becomes available the [`Reactor`]s [`react`] functions is called with 
+//! [`Reaction::Event(event)`] and starts propagating the [`Reaction`]s.
+//!
+//!
+//! [`Event`]: ../struct.Event.html
+//! [`Token`]: ../struct.Token.html
+//! [`System`]: struct.System.html
+//! [`init`]: struct.System.html#method.init
+//! [`start`]: struct.System.html#method.start
+//! [`Reactor`]: ../reactor/trait.Reactor.html
+//! [`react`]: ../reactor/trait.Reactor.html#tymethod.react
+//! [`Reaction::Event(event)`]: ../reactor/enum.Reaction.html
+//!
 use std::cell::RefCell;
 
 use mio::{Evented, Events, Poll, Token, Ready, PollOpt};
@@ -22,6 +41,7 @@ thread_local! {
 /// [`System::init`]: struct.System.html#method.init
 #[derive(Debug)]
 pub enum SystemEvent {
+    /// Stop the System
     Stop,
 }
 
@@ -39,7 +59,7 @@ pub struct System {
     rx: SignalReceiver<SystemEvent>,
 }
 
-static SERVER_TOKEN: Token = Token(0);
+static SYSTEM_TOKEN: Token = Token(0);
 
 macro_rules! with_system {
     ($cu:ident, $x:block) => (
@@ -65,7 +85,7 @@ impl System {
 
         poll.register(
             &rx,
-            SERVER_TOKEN,
+            SYSTEM_TOKEN,
             Ready::readable(),
             PollOpt::edge()
         )?;
@@ -127,7 +147,7 @@ impl System {
             with_system!(current, { current.poll.poll(&mut events, None) })?;
 
             for event in &events {
-                if event.token() == SERVER_TOKEN { 
+                if event.token() == SYSTEM_TOKEN { 
                     let sys_events = with_system!(current, {
                         let mut sys_events = Vec::new();
                         if let Ok(sys_event) = current.rx.try_recv() {
@@ -160,7 +180,7 @@ impl System {
     ///
     /// [`EventedReactor`]: ../reactor/struct.EventedReactor.html
     pub fn free_token(token: Token) {
-        with_system!(current, { current.reactors.remove(token.0); });
+        let _ = with_system!(current, { current.reactors.remove(token.0); });
     }
 
     /// Reserve a token
@@ -173,6 +193,6 @@ impl System {
 
     /// Send a system event to the current system.
     pub fn send(sys_event: SystemEvent) {
-        with_system!(current, { current.rx.sender().send(sys_event) });
+        let _ = with_system!(current, { current.rx.sender().send(sys_event) });
     } 
 }

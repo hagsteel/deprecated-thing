@@ -1,3 +1,5 @@
+//! Unix Domain Sockets
+
 use std::io::ErrorKind::WouldBlock;
 use std::os::unix::net::SocketAddr;
 
@@ -108,6 +110,7 @@ impl Reactor for ReactiveUdsListener {
 }
 
 
+/// Type alias for `Stream<UnixStream>`
 pub type ReactiveUdsStream = Stream<UnixStream>;
 
 impl StreamRef for ReactiveUdsStream {

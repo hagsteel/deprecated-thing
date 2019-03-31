@@ -1,6 +1,67 @@
-use mio::{Event, Evented, Ready, Token};
+//! Reactors are the heart of Sonr and work by pushing data down a chain of reactors.
+//!
+//!```no_run
+//! use std::io::Write;
+//! use std::thread;
+//! use sonr::prelude::*;
+//! use sonr::errors::Result;
+//! use sonr::sync::queue::{ReactiveQueue, ReactiveDeque};
+//! use sonr::net::tcp::{ReactiveTcpListener, TcpStream, ReactiveTcpStream};
+//! 
+//! // -----------------------------------------------------------------------------
+//! // 		- Writer -
+//! // 		Writer "bye" and drop the connection
+//! // -----------------------------------------------------------------------------
+//! struct Writer;
+//! 
+//! impl Reactor for Writer {
+//!     type Input = TcpStream;
+//!     type Output = ();
+//! 
+//!     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+//!         use Reaction::*;
+//!         match reaction {
+//!             Value(mut stream) => {
+//!                 stream.write(b"bye\n");
+//!                 Continue
+//!             }
+//!             Event(ev) => Continue,
+//!             Continue => Continue,
+//!         }
+//!     }
+//! }
+//! 
+//! fn main() -> Result<()> {
+//!     System::init()?;
+//! 
+//!     // Listen for incoming connections
+//!     let listener = ReactiveTcpListener::bind("127.0.0.1:8000")?.map(|(s, _)| s);
+//!     // Connection queue for connections to be sent to another thread.
+//!     let mut queue = ReactiveQueue::unbounded();
+//! 
+//!     for _ in 0..4 {
+//!         let deque = queue.deque();
+//!         thread::spawn(move || -> Result<()> {
+//!             System::init()?;
+//!             let deque = ReactiveDeque::new(deque)?;
+//!             let writer = Writer;
+//!             let run = deque.chain(writer);
+//!             System::start(run)?;
+//!             Ok(())
+//!         });
+//!     }
+//! 
+//!     let run = listener.chain(queue);
+//!     System::start(run)?;
+//!     Ok(())
+//! }
+//! ```
+//!
+//! 
 use std::fmt::{self, Debug, Formatter};
 use std::io::{self, ErrorKind::WouldBlock, Read, Write};
+use std::marker::PhantomData;
+use mio::{Event, Evented, Ready, Token};
 
 use super::system::System;
 use crate::errors::Result;
@@ -40,7 +101,12 @@ impl<T: Debug> Debug for Reaction<T> {
     }
 }
 
-/// A reactor ...
+/// A reactor reacts to a [`Reaction`] and returns a [`Reaction`].
+///
+/// With the `Output` type of one reactor being the same type as `Input` of another it's possible to chain these
+/// two reactors together.
+///
+/// [`Reaction`]: enum.Reaction.html
 pub trait Reactor: Sized {
     /// The output passed to the next reactor in the chain.
     type Output;
@@ -109,14 +175,32 @@ pub trait Reactor: Sized {
 // -----------------------------------------------------------------------------
 // 		- An evented Reactor -
 // -----------------------------------------------------------------------------
-/// The `EventedReactor` is driven by the `System`.
-/// TODO more documentation
+/// The `EventedReactor` is driven by the [`System`].
+///
+/// An `EventedReactor` can not be sent between threads as it's bound to the 
+/// System it was registered with.
+///
+/// When an `EventedReactor` is created it's automatically registered with the [`System`],
+/// and when it dropps the [`Token`] registered with the `EventedReactor` is freed
+/// to be reused with another `EventedReactor`.
+///
+/// The `EventedReactor` does not implement [`Reactor`] by it self,
+/// but rather acts as a building block when creating a Reactor that should
+/// also be evented.
+///
+/// The [`Stream`] is an example of this.
+///
+/// [`Reactor`]: trait.Reactor.html
+/// [`Stream`]: ../net/stream/struct.Stream.html
+/// [`System`]: ../system/struct.System.html
+/// [`Token`]: ../struct.Token.html
 pub struct EventedReactor<E: Evented> {
     inner: E,
     token: Token,
     interest: Ready,
     pub(crate) is_readable: bool,
     pub(crate) is_writable: bool,
+    _not_send: PhantomData<*const ()> // Make the evented reactor !Send
 }
 
 impl<E> Debug for EventedReactor<E>
@@ -146,6 +230,7 @@ impl<E: Evented> EventedReactor<E> {
             interest,
             is_readable: false,
             is_writable: false,
+            _not_send: PhantomData,
         })
     }
 
