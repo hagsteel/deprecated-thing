@@ -117,6 +117,14 @@ impl Reactor for ReactiveTcpListener {
 /// A reactive tcp stream.
 pub type ReactiveTcpStream = Stream<mio::net::TcpStream>;
 
+impl ReactiveTcpStream {
+    /// Create a new reactive tcp stream from a &SocketAddr
+    pub fn connect(addr: &SocketAddr) -> Result<Self> {
+        let stream = mio::net::TcpStream::connect(addr)?;
+        Ok(Self::new(stream)?)
+    }
+}
+
 impl StreamRef for ReactiveTcpStream {
     type Evented = mio::net::TcpStream;
     
