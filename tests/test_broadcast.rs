@@ -21,10 +21,12 @@ impl Reactor for Counter {
     type Input = String;
 
     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> { 
-        self.counter += 1;
-        //eprintln!("------ count: {} - {:?}", self.counter, reaction);
-        if self.counter == 4 {
-            self.sender.send(SystemEvent::Stop);
+        use Reaction::*;
+        if let Value(_) = reaction {
+            self.counter += 1;
+            if self.counter == 2 {
+                self.sender.send(SystemEvent::Stop);
+            }
         }
         Reaction::Continue 
     }
@@ -71,17 +73,11 @@ fn test_broadcast() {
     // First broadcasting thread
     let h3 = thread::spawn(move || {
         bc1.publish("first broadcast".into());
-        bc1.publish("ofloff broadcast".into());
-        bc1.publish("magic broadcast".into());
-        bc1.publish("pagic broadcast".into());
     });
 
     // Second broadcasting thread
     let h4 = thread::spawn(move || {
         bc2.publish("second broadcast".into());
-        bc2.publish("second magic broadcast".into());
-        bc2.publish("second ofloff broadcast".into());
-        bc2.publish("second pagic broadcast".into());
     });
 
     h1.join();

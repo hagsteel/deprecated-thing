@@ -19,7 +19,6 @@ struct TcpClient {
 
 impl TcpClient {
     pub fn new(stream: tcp::ReactiveTcpStream, system_sig: SignalSender<SystemEvent>) -> Self {
-        eprintln!("{:?}", stream.token());
         Self { stream, system_sig }
     }
 }
@@ -27,20 +26,6 @@ impl TcpClient {
 impl Reactor for TcpClient {
     type Output = ();
     type Input = ();
-
-    // fn reacting(&mut self, event: Event) -> bool {
-    //     let res = self.stream.reacting(event);
-
-    //     if self.stream.readable() {
-    //         let mut buf = [0u8; 2];
-    //         self.stream.read(&mut buf);
-    //         if &buf[..] == b"hi" {
-    //             self.system_sig.send(SystemEvent::Stop);
-    //         }
-    //     }
-    //
-    //     res
-    // }
 
     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
         if let Reaction::Event(event) = reaction {
@@ -53,18 +38,6 @@ impl Reactor for TcpClient {
                     }
                 }
             }
-
-            // if !res {
-            //     return Reaction::Event(event);
-            // }
-            //
-            // if self.stream.readable() {
-            //     let mut buf = [0u8; 2];
-            //     self.stream.read(&mut buf);
-            //     if &buf[..] == b"hi" {
-            //         self.system_sig.send(SystemEvent::Stop);
-            //     }
-            // }
         }
 
         Reaction::Continue
