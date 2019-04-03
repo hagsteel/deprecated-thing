@@ -113,6 +113,14 @@ impl Reactor for ReactiveUdsListener {
 /// Type alias for `Stream<UnixStream>`
 pub type ReactiveUdsStream = Stream<UnixStream>;
 
+impl ReactiveUdsStream {
+    /// Create a new reactive uds stream from a &str
+    pub fn connect(path: &str) -> Result<Self> {
+        let stream = UnixStream::connect(path)?;
+        Ok(Self::new(stream)?)
+    }
+}
+
 impl StreamRef for ReactiveUdsStream {
     type Evented = UnixStream;
     

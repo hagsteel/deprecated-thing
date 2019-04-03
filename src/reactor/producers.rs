@@ -73,25 +73,23 @@ impl<T> Reactor for ReactiveGenerator<T> {
     type Input = ();
 
     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
-        if let Reaction::Event(ev) = reaction {
-            if ev.token() != self.reactor.token() {
-                return Reaction::Event(ev)
-            }
-
-            if let Some(val) = self.inner.pop_front() {
-                return Reaction::Value(val);
-            }
-        }
-
-        if let Reaction::Continue = reaction {
-            if let Some(val) = self.inner.pop_front() {
-                return Reaction::Value(val);
-            }
-        }
-
         match reaction {
-            Reaction::Continue => Reaction::Continue,
-            Reaction::Event(ev) => Reaction::Event(ev),
+            Reaction::Event(ev) => {
+                if ev.token() != self.reactor.token() {
+                    return ev.into()
+                }
+
+                match self.inner.pop_front() {
+                    Some(val) => Reaction::Value(val),
+                    None => Reaction::Continue,
+                }
+            }
+            Reaction::Continue => {
+                match self.inner.pop_front() {
+                    Some(val) => Reaction::Value(val),
+                    None => Reaction::Continue,
+                }
+            }
             Reaction::Value(_) => Reaction::Continue,
         }
     }
