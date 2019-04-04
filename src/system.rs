@@ -156,7 +156,6 @@ impl System {
                         sys_events
                     });
 
-                    eprintln!("{:?}", sys_events);
                     for sys_event in sys_events {
                         match sys_event {
                             SystemEvent::Stop => break 'system,
