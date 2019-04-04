@@ -115,6 +115,9 @@ impl Reactor for ReactiveTcpListener {
 }
 
 /// A reactive tcp stream.
+/// See [`Stream`].
+///
+/// [`Stream`]: ../stream/struct.Stream.html
 pub type ReactiveTcpStream = Stream<mio::net::TcpStream>;
 
 impl ReactiveTcpStream {

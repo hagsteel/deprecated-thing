@@ -28,6 +28,73 @@ pub trait StreamRef {
 /// is marked as either readable and / or writable depending on the [`Ready`] state of the
 /// [`Event`].
 ///
+/// It is likely that a Stream<T> is used as part of a larger `Reactor`, and the `react` 
+/// method is called not by the `System` but rather the container of the `Stream`:
+///
+///```
+/// # use std::collections::HashMap;
+/// use sonr::prelude::*;
+/// use sonr::net::tcp::ReactiveTcpStream;
+///
+/// type WriteBuffer = Vec<u8>;
+/// 
+/// struct Connections {
+///     streams: HashMap<Token, (ReactiveTcpStream, WriteBuffer)>
+/// }
+/// 
+/// impl Connections {
+///     pub fn new() -> Self {
+///         Self {
+///             streams: HashMap::new(),
+///         }
+///     }
+/// }
+/// 
+/// impl Reactor for Connections {
+///     type Input = ReactiveTcpStream;
+///     type Output = ();
+/// 
+///     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+///         use Reaction::*;
+///         match reaction {
+///             Value(stream) => {
+///                 // New stream
+///                 self.streams.insert(stream.token(), (stream, WriteBuffer::new()));
+///                 Continue
+///             }
+///             Event(event) => {
+///                 // Check if the event belongs to one of the streams, otherwise
+///                 // pass the event to the next reactor
+///                 if let Some((stream, write_buffer)) = self.streams.get_mut(&event.token()) {
+///                     stream.react(event.into());
+/// 
+///                     // Read
+///                     while stream.readable() {
+///                         // Read until the stream block
+///                         // as the stream will not receive
+///                         // a new read event until it blocks
+///                         break
+///                     }
+/// 
+///                     while stream.writable() && !write_buffer.is_empty() {
+///                         // Write to the stream until there is nothing 
+///                         // left in the write buffer
+///                         break
+///                     }
+/// 
+///                     Continue
+///                 } else {
+///                     event.into()
+///                 }
+///             }
+///             Continue => Continue,
+///         }
+///     }
+/// }
+/// # fn main() {
+/// # }
+///```
+///
 /// [`Stream`]: struct.Stream.html
 /// [`Ready`]: ../../struct.Ready.html
 /// [`Event`]: ../../struct.Event.html
