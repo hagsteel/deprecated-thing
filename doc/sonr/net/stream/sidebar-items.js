@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Stream","When a [`Stream`] `react`s the inner evented reactor is marked as either readable and / or writable depending on the [`Ready`] state of the [`Event`]."]],"trait":[["StreamRef","Anything that has a stream"]]});
+initSidebarItems({"struct":[["Stream","When a [`Stream`] `react`s the inner evented reactor  is marked as either readable and / or writable depending on the [`Ready`] state of the  [`Event`]."]],"trait":[["StreamRef","Anything that has a stream"]]});
