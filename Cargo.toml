@@ -8,6 +8,7 @@ license = "MIT"
 [dependencies]
 mio = "0.6.16"
 crossbeam = "0.7.1"
+parking_lot = "0.7.1"
 
 [target.'cfg(unix)'.dependencies]
 mio-uds = "0.6.7"

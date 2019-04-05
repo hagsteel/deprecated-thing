@@ -44,7 +44,7 @@ impl<T> Clone for SignalSender<T> {
         SignalSender::new(
             self.sender.clone(),
             self.set_readiness.clone(),
-            )
+        )
     }
 }
 
