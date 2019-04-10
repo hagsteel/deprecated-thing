@@ -215,12 +215,6 @@ impl<T: Send + 'static> Reactor for ReactiveSignalReceiver<T> {
     type Output = T;
     type Input = ();
 
-    // fn reacting(&mut self, event: Event) -> bool {
-    //     self.inner.token() == event.token()
-    // }
-
-    // fn react_to(&mut self, _: Self::Input) { }
-
     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
         if let Reaction::Event(event) = reaction {
             if self.inner.token() == event.token() {
