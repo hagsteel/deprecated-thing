@@ -79,7 +79,7 @@ mod prevec;
 pub use prevec::PreVec;
 
 // Re-exports
-pub use mio::{Token, Event, Evented, PollOpt, Poll, Ready};
+pub use mio::{Token, Event, Evented, PollOpt, Poll, Ready, SetReadiness, Registration};
 
 pub mod prelude {
     pub use mio::{Token, Event};
