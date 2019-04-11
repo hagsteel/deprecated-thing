@@ -102,7 +102,9 @@ impl System {
     pub fn init() -> Result<SignalSender<SystemEvent>> {
         CURRENT_SYSTEM.with(|cell| {
             let mut current = cell.borrow_mut();
-            assert!(current.is_none(), "System already initialised");
+            if let Some(ref mut c) = *current {
+                return Ok(c.rx.sender());
+            }
             let system = Self::new()?;
             let handle = system.rx.sender();
             *current = Some(system);
