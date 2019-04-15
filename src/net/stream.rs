@@ -19,6 +19,11 @@ pub trait StreamRef {
     
     /// Mutable reference to the stream
     fn stream_mut(&mut self) -> &mut Stream<Self::Evented>;
+
+    /// Stream token
+    fn token(&self) -> Token {
+        self.stream_ref().token()
+    }
 }
 
 // -----------------------------------------------------------------------------
