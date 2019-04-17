@@ -69,17 +69,19 @@ where
 /// 
 /// To run two tcp listeners at the same time use `and`:
 /// 
-/// ```ignore
-/// use sonr::prelude::*;
-/// use sonr::net::tcp::ReactiveTcpListener;
+/// ```
+/// # use sonr::prelude::*;
+/// # use sonr::reactor::producers::Mono;
+/// # use sonr::errors::Result;
 /// 
-/// fn main() {
-///     System::init();
+/// fn main() -> Result<()> {
+///     let sys_sig = System::init()?;
 /// 
-///     let listener_1 = ReactiveTcpListener::bind("127.0.0.1:8000").unwrap();
-///     let listener_2 = ReactiveTcpListener::bind("127.0.0.1:9000").unwrap();
+///     let reactor_a = Mono::new(1u8)?.map(|_| sys_sig.send(SystemEvent::Stop));
+///     let reactor_b = Mono::new(2u8)?.map(|_| sys_sig.send(SystemEvent::Stop));
 /// 
-///     System::start(listener_1.and(listener_2));
+///     System::start(reactor_a.and(reactor_b));
+///     # Ok(())
 /// }
 /// ```
 /// 
