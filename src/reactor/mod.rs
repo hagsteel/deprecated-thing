@@ -7,17 +7,17 @@
 //! use sonr::errors::Result;
 //! use sonr::sync::queue::{ReactiveQueue, ReactiveDeque};
 //! use sonr::net::tcp::{ReactiveTcpListener, TcpStream, ReactiveTcpStream};
-//! 
+//!
 //! // -----------------------------------------------------------------------------
 //! // 		- Writer -
 //! // 		Writer "bye" and drop the connection
 //! // -----------------------------------------------------------------------------
 //! struct Writer;
-//! 
+//!
 //! impl Reactor for Writer {
 //!     type Input = TcpStream;
 //!     type Output = ();
-//! 
+//!
 //!     fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
 //!         use Reaction::*;
 //!         match reaction {
@@ -30,15 +30,15 @@
 //!         }
 //!     }
 //! }
-//! 
+//!
 //! fn main() -> Result<()> {
 //!     System::init()?;
-//! 
+//!
 //!     // Listen for incoming connections
 //!     let listener = ReactiveTcpListener::bind("127.0.0.1:8000")?.map(|(s, _)| s);
 //!     // Connection queue for connections to be sent to another thread.
 //!     let mut queue = ReactiveQueue::unbounded();
-//! 
+//!
 //!     for _ in 0..4 {
 //!         let deque = queue.deque();
 //!         thread::spawn(move || -> Result<()> {
@@ -50,26 +50,27 @@
 //!             Ok(())
 //!         });
 //!     }
-//! 
+//!
 //!     let run = listener.chain(queue);
 //!     System::start(run)?;
 //!     Ok(())
 //! }
 //! ```
 //!
-//! 
+//!
+use mio::{Event, Evented, Ready, Token};
 use std::fmt::{self, Debug, Formatter};
 use std::io::{self, ErrorKind::WouldBlock, Read, Write};
 use std::marker::PhantomData;
-use mio::{Event, Evented, Ready, Token};
 
 use super::system::System;
 use crate::errors::Result;
 
-pub mod combinators;
+mod combinators;
+pub mod consumers;
 pub mod producers;
 
-use combinators::{And, Chain, Map};
+pub use combinators::{And, Chain, Either, Map, Or};
 
 /// Input / Output of a [`Reactor`].
 ///
@@ -170,6 +171,48 @@ pub trait Reactor: Sized {
     fn map<F, T>(self, callback: F) -> Map<Self, F, T> {
         Map::new(self, callback)
     }
+
+    /// Pass the output from a reactor into one of two
+    /// reactors depending on the output.
+    /// Note that both `Reactor`s in an `or` are required
+    /// to have the same output, and it's only possible to `chain`
+    /// two `or`ed reactors if the reactor that does the chaining outputs
+    /// `Either`.
+    ///
+    ///```
+    /// # use sonr::prelude::*;
+    /// # use sonr::errors::Result;
+    /// use sonr::reactor::consumers::Consume;
+    /// use sonr::reactor::producers::Mono;
+    /// use sonr::reactor::Either;
+    ///
+    /// fn main() -> Result<()> {
+    ///     let system_sig = System::init()?;
+    ///     let producer = Mono::new(1u32)?
+    ///         .map(|val| {
+    ///             if val == 1 {
+    ///                 Either::A(val)
+    ///             } else {
+    ///                 Either::B(val)
+    ///             }
+    ///         });
+    ///
+    ///     let reactor_a = Consume::new();
+    ///     let reactor_b = Consume::new();
+    ///     let reactor = reactor_a.or(reactor_b)
+    ///         .map(|_| {
+    ///             system_sig.send(SystemEvent::Stop);
+    ///         });
+    ///
+    ///     let run = producer.chain(reactor);
+    ///
+    ///     System::start(run)?;
+    ///     Ok(())
+    /// }
+    /// ```
+    fn or<T: Reactor>(self, second: T) -> Or<Self, T> {
+        Or::new(self, second)
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -177,7 +220,7 @@ pub trait Reactor: Sized {
 // -----------------------------------------------------------------------------
 /// The `EventedReactor` is driven by the [`System`].
 ///
-/// An `EventedReactor` can not be sent between threads as it's bound to the 
+/// An `EventedReactor` can not be sent between threads as it's bound to the
 /// System it was registered with.
 ///
 /// When an `EventedReactor` is created it's automatically registered with the [`System`],
@@ -200,7 +243,7 @@ pub struct EventedReactor<E: Evented> {
     interest: Ready,
     pub(crate) is_readable: bool,
     pub(crate) is_writable: bool,
-    _not_send: PhantomData<*const ()> // Make the evented reactor !Send
+    _not_send: PhantomData<*const ()>, // Make the evented reactor !Send
 }
 
 impl<E> Debug for EventedReactor<E>

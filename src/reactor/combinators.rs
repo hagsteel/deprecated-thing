@@ -62,29 +62,29 @@ where
 // 		- And two reactors -
 // -----------------------------------------------------------------------------
 /// Use `and` to run more than one (evented) reactor in parallel.
-/// 
+///
 /// Since the output of a tcp listener is a stream and a socket address, it would
 /// not be possible to chain two tcp listeners together.
 /// It is also not possible to call `System::start` twice in the same thread.
-/// 
+///
 /// To run two tcp listeners at the same time use `and`:
-/// 
+///
 /// ```
 /// # use sonr::prelude::*;
 /// # use sonr::reactor::producers::Mono;
 /// # use sonr::errors::Result;
-/// 
+///
 /// fn main() -> Result<()> {
 ///     let sys_sig = System::init()?;
-/// 
+///
 ///     let reactor_a = Mono::new(1u8)?.map(|_| sys_sig.send(SystemEvent::Stop));
 ///     let reactor_b = Mono::new(2u8)?.map(|_| sys_sig.send(SystemEvent::Stop));
-/// 
+///
 ///     System::start(reactor_a.and(reactor_b));
 ///     # Ok(())
 /// }
 /// ```
-/// 
+///
 /// This means a `Reaction::Event(event)` from the `System` will be passed on to both
 /// listeners.
 pub struct And<T, U>
@@ -130,7 +130,7 @@ where
 // -----------------------------------------------------------------------------
 // 		- Map -
 // -----------------------------------------------------------------------------
-/// Map will capture the `Reaction::Value(val)` returned by `react` and apply 
+/// Map will capture the `Reaction::Value(val)` returned by `react` and apply
 /// the provided closure on the value.  
 ///
 /// The returned value from the map is the new `Output` of the Reactor.
@@ -146,18 +146,18 @@ where
 ///
 /// fn main() -> Result<()> {
 ///     let system_signals = System::init()?;
-/// 
-///     let listener = ReactiveTcpListener::bind("127.0.0.1:5555")?;
+///
+///     let listener = ReactiveTcpListener::bind("127.0.0.1:5557")?;
 ///     let run = listener.map(|(strm, addr)| {
 ///         // Return the tcp stream, ignoring the SocketAddr
 ///         strm
-///     }); 
+///     });
 ///     # thread::spawn(move || {
 ///     #     thread::sleep(Duration::from_millis(100));
-///     #     StdStream::connect("127.0.0.1:5555");
+///     #     StdStream::connect("127.0.0.1:5557");
 ///     #     system_signals.send(SystemEvent::Stop);
 ///     # });
-/// 
+///
 ///     System::start(run)?;
 ///     Ok(())
 /// }
@@ -195,4 +195,79 @@ where
             Reaction::Continue => Reaction::Continue,
         }
     }
+}
+
+// -----------------------------------------------------------------------------
+// 		- Or -
+// -----------------------------------------------------------------------------
+///```
+/// # use sonr::prelude::*;
+/// # use sonr::errors::Result;
+/// use sonr::reactor::consumers::Consume;
+/// use sonr::reactor::producers::Mono;
+/// use sonr::reactor::Either;
+///
+/// fn main() -> Result<()> {
+///     let system_sig = System::init()?;
+///     let producer = Mono::new(1u32)?
+///         .map(|val| {
+///             if val == 1 {
+///                 Either::A(val)
+///             } else {
+///                 Either::B(val)
+///             }
+///         });
+///
+///     let reactor_a = Consume::new();
+///     let reactor_b = Consume::new();
+///     let reactor = reactor_a.or(reactor_b)
+///         .map(|_| {
+///             system_sig.send(SystemEvent::Stop);
+///         });
+///
+///     let run = producer.chain(reactor);
+///
+///     System::start(run)?;
+///     Ok(())
+/// }
+/// ```
+pub struct Or<T, U> {
+    first: T,
+    second: U,
+}
+
+impl<T, U> Or<T, U> {
+    pub(crate) fn new(first: T, second: U) -> Self {
+        Self { first, second }
+    }
+}
+
+impl<T: Reactor<Output = O>, U: Reactor<Output = O>, O> Reactor for Or<T, U> {
+    type Input = Either<T::Input, U::Input>;
+    type Output = O;
+
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
+        use Reaction::*;
+        match reaction {
+            Value(val) => match val {
+                Either::A(val) => self.first.react(Value(val)),
+                Either::B(val) => self.second.react(Value(val)),
+            },
+            Event(event) => {
+                self.first.react(Event(event));
+                self.second.react(Event(event));
+                event.into()
+            }
+            Continue => Continue,
+        }
+    }
+}
+
+/// Either A or B
+/// Used as output when `a_reactor.or(another_reactor)`
+pub enum Either<T, U> {
+    /// A branch
+    A(T),
+    /// B branch
+    B(U),
 }

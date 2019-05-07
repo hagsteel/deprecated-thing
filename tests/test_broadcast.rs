@@ -90,7 +90,7 @@ fn test_broadcast() {
 fn test_bounded_queue() {
     let handle = System::init().unwrap();
     let gen = ReactiveGenerator::new((1u8..=4).collect()).unwrap();
-    let mut queue = ReactiveQueue::bounded(1);
+    let mut queue = ReactiveQueue::bounded(10);
 
     let deque = queue.deque();
 
@@ -108,7 +108,6 @@ fn test_bounded_queue() {
             }
         });
         System::start(run);
-        eprintln!("{:?}", "DONE");
     });
 
     let run = gen.map(|i| {
