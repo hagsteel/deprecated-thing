@@ -3,6 +3,8 @@
 ### Note: this is a work in progress and the api may change
 ### Note: currently not on crates.io, use:
 
+[![Build Status](https://travis-ci.com/hagsteel/sonr.svg?branch=master)](https://travis-ci.com/hagsteel/sonr)
+
 ```
 [dependencies]
 sonr = {git = "https://github.com/hagsteel/sonr" }
