@@ -35,7 +35,7 @@ use super::Capacity;
 /// fn main() -> Result<()> {
 ///     let system_tx = System::init()?;
 /// 
-///     let listener = ReactiveTcpListener::bind("127.0.0.1:5555")?
+///     let listener = ReactiveTcpListener::bind("127.0.0.1:5556")?
 ///         .map(|(s, _)| {
 ///             // Put a system tx and the stream in the queue
 ///             (system_tx.clone(), s)
@@ -49,7 +49,7 @@ use super::Capacity;
 ///
 ///     # thread::spawn(move || {
 ///     #     thread::sleep(Duration::from_millis(100));
-///     #     StdStream::connect("127.0.0.1:5555");
+///     #     StdStream::connect("127.0.0.1:5556");
 ///     # });  
 ///     thread::spawn(move || -> Result<()> {
 ///         let system_tx = System::init()?;

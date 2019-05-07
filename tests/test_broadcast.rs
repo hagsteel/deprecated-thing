@@ -3,12 +3,12 @@ use std::thread;
 
 use mio::Event;
 
-use sonr::reactor::{Reactor, Reaction};
-use sonr::sync::broadcast::Broadcast;
-use sonr::sync::signal::{SignalSender, ReactiveSignalReceiver};
-use sonr::sync::queue::{ReactiveQueue, ReactiveDeque};
-use sonr::system::{System, SystemEvent};
 use sonr::reactor::producers::ReactiveGenerator;
+use sonr::reactor::{Reaction, Reactor};
+use sonr::sync::broadcast::Broadcast;
+use sonr::sync::queue::{ReactiveDeque, ReactiveQueue};
+use sonr::sync::signal::{ReactiveSignalReceiver, SignalSender};
+use sonr::system::{System, SystemEvent};
 
 #[derive(Debug)]
 struct Counter {
@@ -20,7 +20,7 @@ impl Reactor for Counter {
     type Output = ();
     type Input = String;
 
-    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> { 
+    fn react(&mut self, reaction: Reaction<Self::Input>) -> Reaction<Self::Output> {
         use Reaction::*;
         if let Value(_) = reaction {
             self.counter += 1;
@@ -28,12 +28,12 @@ impl Reactor for Counter {
                 self.sender.send(SystemEvent::Stop);
             }
         }
-        Reaction::Continue 
+        Reaction::Continue
     }
 }
 
 #[test]
-fn test_broadcast() { 
+fn test_broadcast() {
     // -----------------------------------------------------------------------------
     // 		- Broadcast a message from two threads to two different threads -
     // 		Each receiving thread should receive two messages and then
@@ -42,16 +42,19 @@ fn test_broadcast() {
     let bc = Broadcast::<String>::unbounded();
     let bc1 = bc.clone();
     let bc2 = bc.clone();
-    
+
     // First receiving thread
     let s1 = bc.subscriber();
     let h1 = thread::spawn(move || {
         let sender = System::init().unwrap();
         let counter = Counter { sender, counter: 0 };
-        let subscriber = ReactiveSignalReceiver::new(s1).unwrap().map(|v| {
-            eprintln!("-> thread 1: : {:?}", v);
-            v
-        }).chain(counter);
+        let subscriber = ReactiveSignalReceiver::new(s1)
+            .unwrap()
+            .map(|v| {
+                eprintln!("-> thread 1: : {:?}", v);
+                v
+            })
+            .chain(counter);
         System::start(subscriber);
     });
 
@@ -60,10 +63,13 @@ fn test_broadcast() {
     let h2 = thread::spawn(move || {
         let sender = System::init().unwrap();
         let counter = Counter { sender, counter: 0 };
-        let subscriber = ReactiveSignalReceiver::new(s2).unwrap().map(|v| {
-            eprintln!("-> thread 2: : {:?}", v);
-            v
-        }).chain(counter);
+        let subscriber = ReactiveSignalReceiver::new(s2)
+            .unwrap()
+            .map(|v| {
+                eprintln!("-> thread 2: : {:?}", v);
+                v
+            })
+            .chain(counter);
         System::start(subscriber);
     });
 
@@ -90,7 +96,7 @@ fn test_broadcast() {
 fn test_bounded_queue() {
     let handle = System::init().unwrap();
     let gen = ReactiveGenerator::new((1u8..=4).collect()).unwrap();
-    let mut queue = ReactiveQueue::bounded(1);
+    let mut queue = ReactiveQueue::bounded(10);
 
     let deque = queue.deque();
 
@@ -108,22 +114,23 @@ fn test_bounded_queue() {
             }
         });
         System::start(run);
-        eprintln!("{:?}", "DONE");
     });
 
-    let run = gen.map(|i| {
-        if i == 4 {
-            handle.send(SystemEvent::Stop);
-        }
-        i
-    }).chain(queue);
+    let run = gen
+        .map(|i| {
+            eprintln!("-> tx: {:?}", i);
+            if i == 4 {
+                handle.send(SystemEvent::Stop);
+            }
+            i
+        })
+        .chain(queue);
     System::start(run);
     thread_handle.join();
 }
 
-
 #[test]
-fn test_bounded_broadcast() { 
+fn test_bounded_broadcast() {
     // -----------------------------------------------------------------------------
     // 		- Broadcast a message from two threads to two different threads -
     // 		Each receiving thread should receive two messages and then
@@ -132,16 +139,19 @@ fn test_bounded_broadcast() {
     let bc = Broadcast::<String>::bounded(0);
     let bc1 = bc.clone();
     let bc2 = bc.clone();
-    
+
     // First receiving thread
     let s1 = bc.subscriber();
     let h1 = thread::spawn(move || {
         let sender = System::init().unwrap();
         let counter = Counter { sender, counter: 0 };
-        let subscriber = ReactiveSignalReceiver::new(s1).unwrap().map(|v| {
-            eprintln!("-> thread 1: : {:?}", v);
-            v
-        }).chain(counter);
+        let subscriber = ReactiveSignalReceiver::new(s1)
+            .unwrap()
+            .map(|v| {
+                eprintln!("-> thread 1: : {:?}", v);
+                v
+            })
+            .chain(counter);
         System::start(subscriber);
     });
 
@@ -150,10 +160,13 @@ fn test_bounded_broadcast() {
     let h2 = thread::spawn(move || {
         let sender = System::init().unwrap();
         let counter = Counter { sender, counter: 0 };
-        let subscriber = ReactiveSignalReceiver::new(s2).unwrap().map(|v| {
-            eprintln!("-> thread 2: : {:?}", v);
-            v
-        }).chain(counter);
+        let subscriber = ReactiveSignalReceiver::new(s2)
+            .unwrap()
+            .map(|v| {
+                eprintln!("-> thread 2: : {:?}", v);
+                v
+            })
+            .chain(counter);
         System::start(subscriber);
     });
 
