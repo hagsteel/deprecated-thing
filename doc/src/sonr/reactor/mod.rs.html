@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/reactor/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/reactor/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../sonr/index.html'><img src='../../../rust-logo.png' alt='logo' width='100'></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -318,6 +318,49 @@
 <span id="318">318</span>
 <span id="319">319</span>
 <span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Reactors are the heart of Sonr and work by pushing data down a chain of reactors.</span>
 <span class="doccomment">//!</span>
@@ -328,17 +371,17 @@
 <span class="doccomment">//! use sonr::errors::Result;</span>
 <span class="doccomment">//! use sonr::sync::queue::{ReactiveQueue, ReactiveDeque};</span>
 <span class="doccomment">//! use sonr::net::tcp::{ReactiveTcpListener, TcpStream, ReactiveTcpStream};</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//! // -----------------------------------------------------------------------------</span>
 <span class="doccomment">//! // 		- Writer -</span>
 <span class="doccomment">//! // 		Writer &quot;bye&quot; and drop the connection</span>
 <span class="doccomment">//! // -----------------------------------------------------------------------------</span>
 <span class="doccomment">//! struct Writer;</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//! impl Reactor for Writer {</span>
 <span class="doccomment">//!     type Input = TcpStream;</span>
 <span class="doccomment">//!     type Output = ();</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//!     fn react(&amp;mut self, reaction: Reaction&lt;Self::Input&gt;) -&gt; Reaction&lt;Self::Output&gt; {</span>
 <span class="doccomment">//!         use Reaction::*;</span>
 <span class="doccomment">//!         match reaction {</span>
@@ -351,15 +394,15 @@
 <span class="doccomment">//!         }</span>
 <span class="doccomment">//!     }</span>
 <span class="doccomment">//! }</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//! fn main() -&gt; Result&lt;()&gt; {</span>
 <span class="doccomment">//!     System::init()?;</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//!     // Listen for incoming connections</span>
 <span class="doccomment">//!     let listener = ReactiveTcpListener::bind(&quot;127.0.0.1:8000&quot;)?.map(|(s, _)| s);</span>
 <span class="doccomment">//!     // Connection queue for connections to be sent to another thread.</span>
 <span class="doccomment">//!     let mut queue = ReactiveQueue::unbounded();</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//!     for _ in 0..4 {</span>
 <span class="doccomment">//!         let deque = queue.deque();</span>
 <span class="doccomment">//!         thread::spawn(move || -&gt; Result&lt;()&gt; {</span>
@@ -371,26 +414,27 @@
 <span class="doccomment">//!             Ok(())</span>
 <span class="doccomment">//!         });</span>
 <span class="doccomment">//!     }</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//!     let run = listener.chain(queue);</span>
 <span class="doccomment">//!     System::start(run)?;</span>
 <span class="doccomment">//!     Ok(())</span>
 <span class="doccomment">//! }</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
+<span class="kw">use</span> <span class="ident">mio</span>::{<span class="ident">Event</span>, <span class="ident">Evented</span>, <span class="ident">Ready</span>, <span class="ident">Token</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>, <span class="ident">Formatter</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="self">self</span>, <span class="ident">ErrorKind</span>::<span class="ident">WouldBlock</span>, <span class="ident">Read</span>, <span class="ident">Write</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
-<span class="kw">use</span> <span class="ident">mio</span>::{<span class="ident">Event</span>, <span class="ident">Evented</span>, <span class="ident">Ready</span>, <span class="ident">Token</span>};
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">system</span>::<span class="ident">System</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::<span class="prelude-ty">Result</span>;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">combinators</span>;
+<span class="kw">mod</span> <span class="ident">combinators</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">consumers</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">producers</span>;
 
-<span class="kw">use</span> <span class="ident">combinators</span>::{<span class="ident">And</span>, <span class="ident">Chain</span>, <span class="ident">Map</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">combinators</span>::{<span class="ident">And</span>, <span class="ident">Chain</span>, <span class="ident">Either</span>, <span class="ident">Map</span>, <span class="ident">Or</span>};
 
 <span class="doccomment">/// Input / Output of a [`Reactor`].</span>
 <span class="doccomment">///</span>
@@ -491,6 +535,48 @@
     <span class="kw">fn</span> <span class="ident">map</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">callback</span>: <span class="ident">F</span>) <span class="op">-&gt;</span> <span class="ident">Map</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">F</span>, <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="ident">Map</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">callback</span>)
     }
+
+    <span class="doccomment">/// Pass the output from a reactor into one of two</span>
+    <span class="doccomment">/// reactors depending on the output.</span>
+    <span class="doccomment">/// Note that both `Reactor`s in an `or` are required</span>
+    <span class="doccomment">/// to have the same output, and it&#39;s only possible to `chain`</span>
+    <span class="doccomment">/// two `or`ed reactors if the reactor that does the chaining outputs</span>
+    <span class="doccomment">/// `Either`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">///```</span>
+    <span class="doccomment">/// # use sonr::prelude::*;</span>
+    <span class="doccomment">/// # use sonr::errors::Result;</span>
+    <span class="doccomment">/// use sonr::reactor::consumers::Consume;</span>
+    <span class="doccomment">/// use sonr::reactor::producers::Mono;</span>
+    <span class="doccomment">/// use sonr::reactor::Either;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// fn main() -&gt; Result&lt;()&gt; {</span>
+    <span class="doccomment">///     let system_sig = System::init()?;</span>
+    <span class="doccomment">///     let producer = Mono::new(1u32)?</span>
+    <span class="doccomment">///         .map(|val| {</span>
+    <span class="doccomment">///             if val == 1 {</span>
+    <span class="doccomment">///                 Either::A(val)</span>
+    <span class="doccomment">///             } else {</span>
+    <span class="doccomment">///                 Either::B(val)</span>
+    <span class="doccomment">///             }</span>
+    <span class="doccomment">///         });</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">///     let reactor_a = Consume::new();</span>
+    <span class="doccomment">///     let reactor_b = Consume::new();</span>
+    <span class="doccomment">///     let reactor = reactor_a.or(reactor_b)</span>
+    <span class="doccomment">///         .map(|_| {</span>
+    <span class="doccomment">///             system_sig.send(SystemEvent::Stop);</span>
+    <span class="doccomment">///         });</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">///     let run = producer.chain(reactor);</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">///     System::start(run)?;</span>
+    <span class="doccomment">///     Ok(())</span>
+    <span class="doccomment">/// }</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">fn</span> <span class="ident">or</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Reactor</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">second</span>: <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">Or</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="ident">Or</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">second</span>)
+    }
 }
 
 <span class="comment">// -----------------------------------------------------------------------------</span>
@@ -498,7 +584,7 @@
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="doccomment">/// The `EventedReactor` is driven by the [`System`].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// An `EventedReactor` can not be sent between threads as it&#39;s bound to the </span>
+<span class="doccomment">/// An `EventedReactor` can not be sent between threads as it&#39;s bound to the</span>
 <span class="doccomment">/// System it was registered with.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// When an `EventedReactor` is created it&#39;s automatically registered with the [`System`],</span>
@@ -521,7 +607,7 @@
     <span class="ident">interest</span>: <span class="ident">Ready</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">is_readable</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">is_writable</span>: <span class="ident">bool</span>,
-    <span class="ident">_not_send</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> ()<span class="op">&gt;</span> <span class="comment">// Make the evented reactor !Send</span>
+    <span class="ident">_not_send</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> ()<span class="op">&gt;</span>, <span class="comment">// Make the evented reactor !Send</span>
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">EventedReactor</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>

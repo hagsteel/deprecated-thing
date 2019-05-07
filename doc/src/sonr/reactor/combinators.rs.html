@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/reactor/combinators.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>combinators.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/reactor/combinators.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>combinators.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../sonr/index.html'><img src='../../../rust-logo.png' alt='logo' width='100'></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -194,6 +194,83 @@
 <span id="194">194</span>
 <span id="195">195</span>
 <span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Combine [`Reactor`]s creating new [`Reactor`]s.</span>
 <span class="doccomment">//!</span>
@@ -259,27 +336,29 @@
 <span class="comment">// 		- And two reactors -</span>
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="doccomment">/// Use `and` to run more than one (evented) reactor in parallel.</span>
-<span class="doccomment">/// </span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// Since the output of a tcp listener is a stream and a socket address, it would</span>
 <span class="doccomment">/// not be possible to chain two tcp listeners together.</span>
 <span class="doccomment">/// It is also not possible to call `System::start` twice in the same thread.</span>
-<span class="doccomment">/// </span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// To run two tcp listeners at the same time use `and`:</span>
-<span class="doccomment">/// </span>
-<span class="doccomment">/// ```ignore</span>
-<span class="doccomment">/// use sonr::prelude::*;</span>
-<span class="doccomment">/// use sonr::net::tcp::ReactiveTcpListener;</span>
-<span class="doccomment">/// </span>
-<span class="doccomment">/// fn main() {</span>
-<span class="doccomment">///     System::init();</span>
-<span class="doccomment">/// </span>
-<span class="doccomment">///     let listener_1 = ReactiveTcpListener::bind(&quot;127.0.0.1:8000&quot;).unwrap();</span>
-<span class="doccomment">///     let listener_2 = ReactiveTcpListener::bind(&quot;127.0.0.1:9000&quot;).unwrap();</span>
-<span class="doccomment">/// </span>
-<span class="doccomment">///     System::start(listener_1.and(listener_2));</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// # use sonr::prelude::*;</span>
+<span class="doccomment">/// # use sonr::reactor::producers::Mono;</span>
+<span class="doccomment">/// # use sonr::errors::Result;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// fn main() -&gt; Result&lt;()&gt; {</span>
+<span class="doccomment">///     let sys_sig = System::init()?;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     let reactor_a = Mono::new(1u8)?.map(|_| sys_sig.send(SystemEvent::Stop));</span>
+<span class="doccomment">///     let reactor_b = Mono::new(2u8)?.map(|_| sys_sig.send(SystemEvent::Stop));</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     System::start(reactor_a.and(reactor_b));</span>
+<span class="doccomment">///     # Ok(())</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
-<span class="doccomment">/// </span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// This means a `Reaction::Event(event)` from the `System` will be passed on to both</span>
 <span class="doccomment">/// listeners.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">And</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span>
@@ -325,7 +404,7 @@
 <span class="comment">// -----------------------------------------------------------------------------</span>
 <span class="comment">// 		- Map -</span>
 <span class="comment">// -----------------------------------------------------------------------------</span>
-<span class="doccomment">/// Map will capture the `Reaction::Value(val)` returned by `react` and apply </span>
+<span class="doccomment">/// Map will capture the `Reaction::Value(val)` returned by `react` and apply</span>
 <span class="doccomment">/// the provided closure on the value.  </span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// The returned value from the map is the new `Output` of the Reactor.</span>
@@ -341,18 +420,18 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// fn main() -&gt; Result&lt;()&gt; {</span>
 <span class="doccomment">///     let system_signals = System::init()?;</span>
-<span class="doccomment">/// </span>
-<span class="doccomment">///     let listener = ReactiveTcpListener::bind(&quot;127.0.0.1:5555&quot;)?;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     let listener = ReactiveTcpListener::bind(&quot;127.0.0.1:5557&quot;)?;</span>
 <span class="doccomment">///     let run = listener.map(|(strm, addr)| {</span>
 <span class="doccomment">///         // Return the tcp stream, ignoring the SocketAddr</span>
 <span class="doccomment">///         strm</span>
-<span class="doccomment">///     }); </span>
+<span class="doccomment">///     });</span>
 <span class="doccomment">///     # thread::spawn(move || {</span>
 <span class="doccomment">///     #     thread::sleep(Duration::from_millis(100));</span>
-<span class="doccomment">///     #     StdStream::connect(&quot;127.0.0.1:5555&quot;);</span>
+<span class="doccomment">///     #     StdStream::connect(&quot;127.0.0.1:5557&quot;);</span>
 <span class="doccomment">///     #     system_signals.send(SystemEvent::Stop);</span>
 <span class="doccomment">///     # });</span>
-<span class="doccomment">/// </span>
+<span class="doccomment">///</span>
 <span class="doccomment">///     System::start(run)?;</span>
 <span class="doccomment">///     Ok(())</span>
 <span class="doccomment">/// }</span>
@@ -390,6 +469,81 @@
             <span class="ident">Reaction</span>::<span class="ident">Continue</span> <span class="op">=&gt;</span> <span class="ident">Reaction</span>::<span class="ident">Continue</span>,
         }
     }
+}
+
+<span class="comment">// -----------------------------------------------------------------------------</span>
+<span class="comment">// 		- Or -</span>
+<span class="comment">// -----------------------------------------------------------------------------</span>
+<span class="doccomment">///```</span>
+<span class="doccomment">/// # use sonr::prelude::*;</span>
+<span class="doccomment">/// # use sonr::errors::Result;</span>
+<span class="doccomment">/// use sonr::reactor::consumers::Consume;</span>
+<span class="doccomment">/// use sonr::reactor::producers::Mono;</span>
+<span class="doccomment">/// use sonr::reactor::Either;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// fn main() -&gt; Result&lt;()&gt; {</span>
+<span class="doccomment">///     let system_sig = System::init()?;</span>
+<span class="doccomment">///     let producer = Mono::new(1u32)?</span>
+<span class="doccomment">///         .map(|val| {</span>
+<span class="doccomment">///             if val == 1 {</span>
+<span class="doccomment">///                 Either::A(val)</span>
+<span class="doccomment">///             } else {</span>
+<span class="doccomment">///                 Either::B(val)</span>
+<span class="doccomment">///             }</span>
+<span class="doccomment">///         });</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     let reactor_a = Consume::new();</span>
+<span class="doccomment">///     let reactor_b = Consume::new();</span>
+<span class="doccomment">///     let reactor = reactor_a.or(reactor_b)</span>
+<span class="doccomment">///         .map(|_| {</span>
+<span class="doccomment">///             system_sig.send(SystemEvent::Stop);</span>
+<span class="doccomment">///         });</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     let run = producer.chain(reactor);</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     System::start(run)?;</span>
+<span class="doccomment">///     Ok(())</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">/// ```</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Or</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> {
+    <span class="ident">first</span>: <span class="ident">T</span>,
+    <span class="ident">second</span>: <span class="ident">U</span>,
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> <span class="ident">Or</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">first</span>: <span class="ident">T</span>, <span class="ident">second</span>: <span class="ident">U</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">first</span>, <span class="ident">second</span> }
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Reactor</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">O</span><span class="op">&gt;</span>, <span class="ident">U</span>: <span class="ident">Reactor</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">O</span><span class="op">&gt;</span>, <span class="ident">O</span><span class="op">&gt;</span> <span class="ident">Reactor</span> <span class="kw">for</span> <span class="ident">Or</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> {
+    <span class="kw">type</span> <span class="ident">Input</span> <span class="op">=</span> <span class="ident">Either</span><span class="op">&lt;</span><span class="ident">T</span>::<span class="ident">Input</span>, <span class="ident">U</span>::<span class="ident">Input</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">O</span>;
+
+    <span class="kw">fn</span> <span class="ident">react</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">reaction</span>: <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Reaction</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
+        <span class="kw">use</span> <span class="ident">Reaction</span>::<span class="kw-2">*</span>;
+        <span class="kw">match</span> <span class="ident">reaction</span> {
+            <span class="ident">Value</span>(<span class="ident">val</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">val</span> {
+                <span class="ident">Either</span>::<span class="ident">A</span>(<span class="ident">val</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">first</span>.<span class="ident">react</span>(<span class="ident">Value</span>(<span class="ident">val</span>)),
+                <span class="ident">Either</span>::<span class="ident">B</span>(<span class="ident">val</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">second</span>.<span class="ident">react</span>(<span class="ident">Value</span>(<span class="ident">val</span>)),
+            },
+            <span class="ident">Event</span>(<span class="ident">event</span>) <span class="op">=&gt;</span> {
+                <span class="self">self</span>.<span class="ident">first</span>.<span class="ident">react</span>(<span class="ident">Event</span>(<span class="ident">event</span>));
+                <span class="self">self</span>.<span class="ident">second</span>.<span class="ident">react</span>(<span class="ident">Event</span>(<span class="ident">event</span>));
+                <span class="ident">event</span>.<span class="ident">into</span>()
+            }
+            <span class="ident">Continue</span> <span class="op">=&gt;</span> <span class="ident">Continue</span>,
+        }
+    }
+}
+
+<span class="doccomment">/// Either A or B</span>
+<span class="doccomment">/// Used as output when `a_reactor.or(another_reactor)`</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Either</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// A branch</span>
+    <span class="ident">A</span>(<span class="ident">T</span>),
+    <span class="doccomment">/// B branch</span>
+    <span class="ident">B</span>(<span class="ident">U</span>),
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../../../";window.currentCrate = "sonr";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>

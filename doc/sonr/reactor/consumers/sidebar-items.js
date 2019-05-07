@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Consume","Consume the output of a `Reactor`."]]});
