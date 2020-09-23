@@ -1,7 +1,7 @@
 [package]
 name = "sonr"
 version = "0.1.0"
-authors = ["Jonas Hagstedt <hagstedt@gmail.com>"]
+authors = ["Hagsteel <me@hagsteel.com>"]
 edition = "2018"
 license = "MIT"
 
